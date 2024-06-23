@@ -18,3 +18,8 @@ elif len(t) == 2:
     print(2)
 else:
     print(0)
+
+# вариант 3
+t = {first, second, third}
+if len(t) == 3: print(0)
+else: print(4-len(t))
