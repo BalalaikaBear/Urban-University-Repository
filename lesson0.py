@@ -104,4 +104,11 @@ print("93:", set_1)
 set_1.add(0)  # метод add добавляет элемент
 print("94:", set_1)
 
+#IF
+name = "J"
+if name == "Mark" or name == "J":
+    print("95:", "Oh, hi", name)
+else:
+    print("95:", "Hello", name)
+
 # name = input("Enter your name: ")  # ввод символов (тип данных - str)
