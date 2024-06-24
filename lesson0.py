@@ -104,11 +104,21 @@ print("93:", set_1)
 set_1.add(0)  # метод add добавляет элемент
 print("94:", set_1)
 
-#IF
+# IF
 name = "J"
 if name == "Mark" or name == "J":
     print("95:", "Oh, hi", name)
 else:
     print("95:", "Hello", name)
+
+# WHILE
+#while 1 > 0:  # True
+#    number = int(input("Введите число:"))
+#    if number % 2 == 0:
+#        print('Число четное')
+#        continue  # пропускает последующие команды и переходит на следующее повторение цикла
+#    else:
+#        print('Число нечетное')
+#        break  # останавливает цикл
 
 # name = input("Enter your name: ")  # ввод символов (тип данных - str)
