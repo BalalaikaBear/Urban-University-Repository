@@ -1,3 +1,5 @@
+#https://www.codewars.com/kata/50654ddff44f800200000007
+
 def solution(a, b):
     c = sorted([a, b], key=len)
     return c[0] + c[1] + c[0]

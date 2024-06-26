@@ -121,4 +121,14 @@ else:
 #        print('Число нечетное')
 #        break  # останавливает цикл
 
+# FOR
+for i in "hello":
+    print(i)
+
+a = ['one', 'two', 'three']
+for i in a:
+    print(i)
+
+
+
 # name = input("Enter your name: ")  # ввод символов (тип данных - str)
