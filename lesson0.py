@@ -122,13 +122,24 @@ else:
 #        break  # останавливает цикл
 
 # FOR
-for i in "hello":
-    print(i)
+for i in "hello":  # i возьмет поочередно каждый символ в строке
+    print("100:", i)
 
 a = ['one', 'two', 'three']
 for i in a:
-    print(i)
+    print("101:", i)
 
+for i in range(len(a)):  # выведет элементы 0, 1, 2
+    print("102:", a[i])  # отобразить i-й элемент
 
+for i in range(1, 11, 3):  # начало последовательности, конец последовательности (не включительно), шаг
+    for j in range (1, 11, 4):
+        print(f'103: {i} x {j} = {i*j}')
+
+a = {"a": 1, "b": 2, "c": 3}
+for i in a:
+    print("104:", i, a[i])  # i - ключ, [i] - значение
+for i, k in a.items():  # вывод словаря в i и k
+    print("105:", i, k)
 
 # name = input("Enter your name: ")  # ввод символов (тип данных - str)
