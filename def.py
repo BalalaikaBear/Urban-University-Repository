@@ -18,6 +18,17 @@ def lottery2(*args, **kwargs):  # *<название переменной> - н�
 def test(a = 2, b = True):
     print(a, b)
 
+def printer():
+    global a, b  # возможность перезаписывания глобальных имен
+    a = True
+    b = False
+    print(a, b)
+a = 10
+b = 15
+print(a, b)
+printer()
+
+
 say_hello()
 say_hello("Arnold")
 say_hello("Mark")
