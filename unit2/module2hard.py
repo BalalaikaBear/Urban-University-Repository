@@ -1,23 +1,22 @@
+import random
+
 def find_pair_of_numbers(n,  # для какого числа искать пары
-                         limit = 21,  # предел поиска пары
                          is_following_task = True):  # отображение строки или списка (соответствие заданию?)
 
     result = []
 
     # генерация чисел (пар)
-    for first in range(1, limit):
-        for second in range(1, limit):
+    for first in range(1, n):
+        for second in range(1, n):
 
-            if (n % (first + second) == 0  # число кратно сумме пар
-                    and first != second):  # числа разные?
-
-                # проверка на одинаковые пары чисел
-                if [second, first] not in result:
-                    result.append([first, second])  # добавить пары в список
+            if (n % (first + second) == 0  # число кратно сумме пар?
+                    and first != second  # числа разные?
+                    and [second, first] not in result):  # проверка на одинаковые пары
+                result.append([first, second])  # добавить пары в список
 
     # вывести строку или список?
     if is_following_task:
-        # преобразовать лист в строку
+        # преобразовать список в строку
         for char in ["[", "]", " ", ","]:
             result = str(result).replace(char, "")
         return result
@@ -25,8 +24,13 @@ def find_pair_of_numbers(n,  # для какого числа искать па�
         return result
 
 
+min_value = 3  # начальный диапазон чисел
 max_value = 20  # конечный диапазон чисел
 
-# проверка всех значений от 3 до max_value
-for i in range(3,max_value+1):
-    print(i, "-", find_pair_of_numbers(i, max_value+1, 1))
+# вывод рандомного числа и его пар
+random_value = random.randint(min_value, max_value)
+print(random_value, "-", find_pair_of_numbers(random_value))
+
+# проверка всех значений от min_value до max_value
+# for i in range(3,max_value+1):
+#     print(i, "-", find_pair_of_numbers(i, 1))
