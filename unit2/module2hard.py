@@ -1,6 +1,6 @@
 import random
 
-def find_pair_of_numbers(n,  # для какого числа искать пары
+def find_pairs_of_number(n,  # для какого числа искать пары
                          is_following_task = True):  # отображение строки или списка (соответствие заданию?)
 
     result = []
@@ -29,7 +29,7 @@ max_value = 20  # конечный диапазон чисел
 
 # вывод рандомного числа и его пар
 random_value = random.randint(min_value, max_value)
-print(random_value, "-", find_pair_of_numbers(random_value))
+print(random_value, "-", find_pairs_of_number(random_value))
 
 # проверка всех значений от min_value до max_value
 # for i in range(3,max_value+1):
