@@ -51,3 +51,20 @@ print_params3(*list_)  # * - распаковка списка
 
 dict_ = {"a": 1, "b": 2, "c": 3}
 print_params3(**dict_)  # ** - распаковка словаря. Имена ключей должны соответствовать именам параметров
+
+
+def print_list(a = 3, b = []):  # список b был создан в момент определения функции
+    b.append(a)
+    print(b)
+print_list()
+print_list(5)
+print_list(10)
+
+def print_list2(a = 3, b = None):
+    if b is None:  # исправление накапливания списка
+        b = []
+    b.append(a)
+    print(b)
+print_list2(b=[-1])
+print_list2(5)
+print_list2(10)
