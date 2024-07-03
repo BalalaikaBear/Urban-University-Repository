@@ -52,6 +52,23 @@ print_params3(*list_)  # * - распаковка списка
 dict_ = {"a": 1, "b": 2, "c": 3}
 print_params3(**dict_)  # ** - распаковка словаря. Имена ключей должны соответствовать именам параметров
 
+print()
+
+def summator(*values):
+    s = 0
+    for i in values:
+        s += i
+    return s
+print("sum =", summator(1, 2, 3, 4, 5, 6, 7))
+
+def info(song, *types, name="John", **values):  # * неименованные параметры, ** именованные параметры
+    print("Аргумент:", values)  # -> словарь
+    for key, value in values.items():
+        print(key, value)
+    print(types)
+info("Poets", 1,2,3,4, name="Karl", course="Python", date="2022-02-12")
+
+print()
 
 def print_list(a = 3, b = []):  # список b был создан в момент определения функции
     b.append(a)
