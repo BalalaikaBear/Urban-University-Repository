@@ -85,3 +85,11 @@ def print_list2(a = 3, b = None):
 print_list2(b=[-1])
 print_list2(5)
 print_list2(10)
+
+
+def summa(n):  # рекурсия
+    if n == 0:
+        return 0
+    else:
+        return n + summa(n - 1)
+print(summa(5))  # 5+4+3+2+1+0 -> 15
