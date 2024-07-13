@@ -4,7 +4,7 @@ def summator(*n):
     # отладка
 #    print("Summator:", sum, type(n), n)
 
-    if len(n) == 1 and (type(n[0]) != float or type(n[0]) != int):  # если последовательность размером в 1 элемент
+    if len(n) == 1:  # если последовательность размером в 1 элемент
         n = n[0]  # раскрыть последовательность
 
     if type(n) == float or type(n) == int:  # если первый элемент число, занести число в sum
