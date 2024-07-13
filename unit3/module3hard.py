@@ -1,13 +1,13 @@
 def summator(*n):
 
     # отладка
-#    print("Summator:", sum, type(n), n)
+#    print("Summator:", type(n), n)
 
     if len(n) == 1:  # если последовательность размером в 1 элемент
         n = n[0]  # раскрыть последовательность
 
     # отладка
-#    print("Summator:", sum, type(n), n)
+#    print("Summator:", type(n), n)
 
     if isinstance(n, (int, float)):  # если число
         return n
