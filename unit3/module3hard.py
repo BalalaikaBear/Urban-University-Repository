@@ -1,5 +1,5 @@
 def summator(*n):
-    sum_ = 0
+    _sum = 0
 
     # отладка
 #    print("Summator:", sum, type(n), n)
@@ -7,26 +7,24 @@ def summator(*n):
     if len(n) == 1:  # если последовательность размером в 1 элемент
         n = n[0]  # раскрыть последовательность
 
-    if type(n) == float or type(n) == int:  # если первый элемент число, занести число в sum
-        sum_ = n
+    if isinstance(n, (int, float)):  # если первый элемент число, занести число в sum
+        _sum = n
 
     # отладка
 #    print("Summator:", sum, type(n), n)
 
-    if isinstance(n, int) and isinstance(n, float):  # если число
-        return sum_ + n
+    if isinstance(n, (int, float)):  # если число
+        return _sum
     elif isinstance(n, str):  # если строка
-        return sum_ + len(n)
-    elif isinstance(n, list) or isinstance(n, tuple) or isinstance(n, set):  # если последовательность
-        n = list(n)  # преобразование set в list (без этой строки ошибка)
+        return _sum + len(n)
+    elif isinstance(n, (list, tuple, set)):  # если последовательность
+        n = list(n)  # преобразование set в list (без этой строки ошибка, поскольку set is not subscriptable)
         if len(n) == 0:
-            return sum_
+            return _sum
         else:
-            return sum_ + summator(n[0]) + summator(n[1:])
+            return _sum + summator(n[0]) + summator(n[1:])
     elif isinstance(n, dict):  # если словарь
-        return sum_ + summator(list(n.items()))
-    else:  # без него не работает, не понимаю почему (проверка на NoneType?)
-        return sum_
+        return _sum + summator(list(n.items()))
 
 
 data_structure = [
