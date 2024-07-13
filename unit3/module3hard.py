@@ -1,55 +1,33 @@
-#def summator(input):
-#    print(input)
-#    if not (type(data_structure[0]) == float
-#            or type(data_structure[0]) == int):  # если 1-й элемент не число
-#        input = [0] + list(input)  # вставить число в начало списка
-#                                   # 1-е число - сумма
-#    sum = input[0]
-#    if len(input) == 1:
-#        return sum  # вывод конечного числа
-#    else:
-#        # вся логика
-#        for thing in input[1:]:
-#            if isinstance(thing, str):  # если str
-#                return [sum + len(thing)]
-#            elif type(thing) == float or type(thing) == int:  # если число
-#                return [sum + thing]
-#            elif type(thing) == list or type(thing) == tuple or type(thing) == set:  # если последовательность
-#                return summator([sum] + list(thing))
-#            elif isinstance(thing, dict):  # если словарь
-#                for i, j in thing.items():
-#                    return summator([sum, i, j])
+def summator(*n):
+    sum = 0
+    #print("Summator:", sum, type(n), n)
 
-def summator(*input):
-    input = list(input)
-    print(input)
-    if not (type(data_structure[0]) == float
-        or type(data_structure[0]) == int):  # если 1-й элемент не число
-        input = [0] + list(input)  # вставить число в начало списка
-        print("check")                           # 1-е число - сумма
-    sum = input[0]
-    if len(input) == 1 and (type(input) == int or type(input) == float):  # последнее число? -> завершить
-        return sum
-    else:
-        # основная логика
-        for thing in input[1:]:
-            if type(thing) == list or type(thing) == tuple or type(thing) == set:  # если последовательность
-                print("list")
-                return summator(sum, thing)
-            elif isinstance(thing, str):  # если str
-                print("str")
-                return sum + len(thing)
-            elif type(thing) == float or type(thing) == int:  # если число
-                print("int")
-                return sum + thing
-            elif isinstance(thing, dict):  # если словарь
-                print("dict")
-                for i, j in thing.items():
-                    return summator(sum, i, j)
+    if len(n) == 1 and (type(n[0]) != float or type(n[0]) != int):  # если последовательность размером в 1 элемент
+        n = n[0]  # раскрыть последовательность
+
+    if type(n) == float or type(n) == int:  # если первый элемент число, занести число в sum
+        sum = n
 
 
-def test(*input):
-    print(input)
+    print("Summator:", sum, type(n), n)
+
+    if isinstance(n, int) and isinstance(n, float):  # если число
+        return sum + n
+    elif isinstance(n, str):  # если строка
+        return sum + len(n)
+    elif isinstance(n, list) or isinstance(n, tuple) or isinstance(n, set):  # если последовательность
+        if len(n) == 0:
+            return sum
+        else:
+            if type(n[0]) != int or type(n[0]) != float:
+                return sum + summator(n[1:])  # если n[0] == "NoneType"
+            else:
+                return sum + summator(n[0]) + summator(n[1:])
+    elif isinstance(n, dict):  # если словарь
+        for i, j in n.items():
+            return sum + summator(i, j)
+
+        #return n[0] + summator(n[1:])
 
 data_structure = [
     [1, 2, 3],
@@ -59,5 +37,4 @@ data_structure = [
     ((), [{(2, 'Urban', ('Urban2', 35))}])
 ]
 
-test(0, data_structure)
 print(summator(data_structure))
