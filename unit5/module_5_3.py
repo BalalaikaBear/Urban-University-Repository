@@ -27,17 +27,15 @@ class House:
     def __ge__(self, other):  # greater equal"
         return self.number_of_floors >= other.number_of_floors
 
-    def __add__(self, value):  # +
+    def __add__(self, value):  # self + y
         if isinstance(value, int):
             return House(number_of_floors=self.number_of_floors + value)
 
-    def __radd__(self, value):
-        if isinstance(value, int):
-            return House(number_of_floors=self.number_of_floors + value)
+    def __radd__(self, value):  # x + self
+        return self.__add__(value)
 
-    def __iadd__(self, value):
-        if isinstance(value, int):
-            return House(number_of_floors=self.number_of_floors + value)
+    def __iadd__(self, value):  # +=
+        return self.__add__(value)
 
     def go_to(self, new_floor):
         if self.number_of_floors >= new_floor >= 0:
