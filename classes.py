@@ -49,7 +49,7 @@ print("2:", man == woman, man is woman, id(man), id(woman))  # каждый об
 print("3:", type(woman.__getstate__()), woman.__getstate__())  # отображение всех атрибутов класса в виде словаря
 print("4:", man.name, forty_seven.name)  # обращение к данным
 print("5:", len(man))  # обращение к функции __len__ в классе
-print("6:", man < woman)  # обращение к функции __lt__ в классах - сравнение объектов
+print("6:", man > woman)  # обращение к функции __lt__ в классах - сравнение объектов
 print("7:", woman)  # возвращается текст из функции __str__ в классе
 
 man.say_info()  # вызов метода для определенного класса
