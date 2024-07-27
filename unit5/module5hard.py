@@ -49,20 +49,20 @@ class UrTube:
         """
         Возвращает список видео, содержащих поисковое слово.
         """
-        self.video_list = []
+        video_list = []
 
         for video in self.videos:  # поиск видео по запросу
             if search_name.lower() in video.title.lower():
-                self.video_list.append(video.title)
+                video_list.append(video.title)
 
-        if len(self.video_list) != 0:  # возвращает список найденных видео, иначе возвращает None
-            return self.video_list
+        if len(video_list) != 0:  # возвращает список найденных видео, иначе возвращает None
+            return video_list
 
     def watch_video(self, video_name):
         """
         Просмотр видео с проверкой ограничений.
         """
-        if self.current_user == None:  # Проверка на вхождение в аккаунт
+        if self.current_user is None:  # Проверка на вхождение в аккаунт
             print("Войдите в аккаунт, чтобы смотреть видео")
         else:
             for video in self.videos:
@@ -79,12 +79,9 @@ class UrTube:
         """
         Проигрывание видео.
         """
-        current_video_second = video.time_now  # запись переменной - до какой секунды было просмотрено видео до открытия
-
-        # просмотр видео
-        while current_video_second < video.duration:
-            current_video_second += 1
-            print(current_video_second, end=" ")
+        while video.time_now < video.duration:
+            video.time_now += 1
+            print(video.time_now, end=" ")
             time.sleep(1)  # пауза длительностью 1 секунда
         video.time_now = 0  # после просмотра сбросить записанное время
         print("Конец видео")
