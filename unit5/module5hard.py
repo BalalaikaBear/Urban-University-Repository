@@ -3,7 +3,7 @@ import time
 
 class UrTube:
     """
-    users - список пользователей (dict( User.nickname, (password, age) ))
+    users - список пользователей (dict( User.nickname: (password, age) ))
     videos - список видео (list(Video))
     current_user - текущий пользователь (User)
     """
