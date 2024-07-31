@@ -84,3 +84,22 @@ user1 = User(*other, **user)
 user2 = User(*[1, 3, 5], **user)
 print("12:", user1 is user2, id(user1), id(user2))  # переменные занимают ту же ячейку памяти
 print("13:", user1.args, user2.name)
+
+
+# Наследование
+class Human:  # создание собственного типа данных
+
+    head = True  # общий атрибут
+
+    def __init__(self):  # вызывается при создании объекта класса Student,
+        self.about()     # поскольку Human является родительским классом
+
+class Student(Human):  # класс Human - родительский, класс Student - дочерний
+
+    def about(self):
+        print("Я студент")
+
+
+# human = Human()  # вызывает ошибку, поскольку в Human нет метода about()
+student = Student()
+print("15:", student.head)
