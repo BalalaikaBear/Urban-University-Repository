@@ -93,15 +93,32 @@ class Human:  # создание собственного типа данных
     _legs = True
     __arms = True  # защита от переопределения в дочерних классах. Для вызова необходимо прописать human.Human__arms
 
-    def __init__(self):  # вызывается при создании объекта класса Student,
+    def __init__(self, name, group):  # вызывается при создании объекта класса Student,
         self.about()     # поскольку Human является родительским классом
+        self.name = name
+        super().__init__(group)  # ссылка на класс StudentGroup
+        super().about()  # вызов функции из класса StudentGroup
 
-class Student(Human):  # класс Human - родительский, класс Student - дочерний
+
+class StudentGroup:
+    def __init__(self, group):
+        self.group = group
 
     def about(self):
-        print("Я студент")
+        print(f"{self.name} учится в группе {self.group}")
+
+
+class Student(Human, StudentGroup):  # класс Human - родительский, класс Student - дочерний
+
+    def __init__(self, name, place, group):
+        super().__init__(name, group)  # передаем name и group в родительский класс Human и StudentGroup
+        self.place = place
+
+    def about(self):
+        print(f"Я студент")
+
 
 
 # human = Human()  # вызывает ошибку, поскольку в Human нет метода about()
-student = Student()
-print("15:", student.head)
+student = Student("Pavel", "Home", 400)
+print("15:", student.head, student.name)
