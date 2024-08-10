@@ -16,7 +16,7 @@ else:
     challenge_result = 'Ничья!'
 
 # %
-print('В команде "Мастера кода" участников: %(team1)s!' % {"team1": team1_num})
+print('В команде "Мастера кода" участников: %s!' % team1_num)
 print('Итого сегодня в командах участников: %(team1)s и %(team2)s!' % {"team1": team1_num, "team2": team2_num})
 
 # format()
