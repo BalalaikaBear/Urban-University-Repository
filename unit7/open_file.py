@@ -30,5 +30,10 @@ print(file.writable())  # можно ли записать в файл? -> True
 print(file.readable())  # можно ли прочитать информацию в файле? -> False
 print(file.seekable())  # можно ли перемещать курсор? -> True
 file.write(str(random.randint(0, 255)))  # запись случайного числа в файл
-pprint(file.read())  # -> выдаст ошибку поскольку он открыт в режиме записи
+#pprint(file.read())  # -> выдаст ошибку поскольку он открыт в режиме записи
 file.close()
+
+with open("sample.txt", encoding="utf-8") as file:  # оператор with автоматически закрывает файл по завершении выполнения
+    for line in file:
+        print(line, end="")
+    print(f" {file.tell()}")
