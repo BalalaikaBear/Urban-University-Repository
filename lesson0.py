@@ -165,3 +165,43 @@ print("117:", dir(a))  # dir() - показать информацию об ат
 print("118:", isinstance(a, list))  # isinstance() - соответствие определенному классу
 print("119:", type(a) == str)  # аналогично верхней строке
 print("120: ID =", id(a))  # id() - уникальный номер переменной (адрес в памяти)
+
+# Ошибки
+try:
+    for i in [0, 10, 20, "a"]:
+        print(10 / i)
+except ValueError:
+    print(ValueError)
+except ZeroDivisionError as exc:  # сохранения объекта ошибки в переменную
+    print("130:", type(exc), exc)
+except:
+    print("pass")
+else:  # выполняется если ошибки не было
+    pass
+finally:  # дополнительный код, выполняющийся в конце
+    pass
+
+def greet_person(name):
+    if name == "Заяц":
+        try:
+            raise Exception("Проезд зайцам воспрещен!")  # raise <Класс ошибки> (<аргумент ошибки>) - генерирование собственного исключения
+            raise  # можно вызывать raise без указания класса
+        except Exception as exc:
+            print("130.b:", type(exc), exc)  # при выводе объекта Exception выводится ранее записанный аргумент
+    else:
+        print(f"130.a: Привет, {name}!")
+greet_person("Волк")
+greet_person("Заяц")
+
+class ProZero(Exception):  # собственный класс ошибки, наследуемый от Exception
+    def __init__(self, message, extra_info):
+        self.message = message
+        self.extra_info = extra_info
+def f(a, b):
+    if b == 0:
+        raise ProZero("Деление на ноль невозможно", {"a": a, "b": b})  # вызов собственного класса ошибки, работает только при указании атрибута
+    return a / b
+try:
+    print(f(5, 0))
+except ProZero as e:
+    print("131:", e.message, e.extra_info)
