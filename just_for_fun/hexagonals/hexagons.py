@@ -1,6 +1,7 @@
-import random
-
-import pygame, math
+import pygame
+import random, math
+import numpy as np
+from numpy.linalg import inv
 from collections import namedtuple
 
 # инициализация
@@ -11,35 +12,31 @@ pygame.font.init()
 Color = namedtuple("Color", ["r", "g", "b"])
 Hex = namedtuple("Hex", ["q", "r"])  # axial storage
 Point = namedtuple("Point", ["x", "y"])
-HEX_DIRECTIONS = [Hex(1, 0), Hex(1, -1), Hex(0, -1), Hex(-1, 0), Hex(-1, 1), Hex(0, 1)]  # соседние ячейки по часовой стрелке
+HEX_DIRECTIONS = [Hex(1, 0), Hex(1, -1), Hex(0, -1),
+                  Hex(-1, 0), Hex(-1, 1), Hex(0, 1)]  # соседние ячейки по часовой стрелке
 
 # цвета
 BACKGROUND = Color(200, 200, 200)
 WHITE = Color(255, 255, 255)
 
 # размер экрана
-WIDTH = 1000
-HEIGHT = 1000
+WIDTH = 1600
+HEIGHT = 900
 HEXAGON_SIZE = 50
 FPS = 60
 running = True
 
-class Camera:
-    def __init__(self, pos_speed=2, position=[0,0], rotation=0.0, zoom=0.0):
-        self.pos_speed = pos_speed
-        self.position = position
-        self.rotation = rotation
-        self.zoom = zoom
-        self.dx = 0
-        self.dy = 0
+#
+CAMERA_SPEED = 12
+ROTATION_SPEED = 1
 
-    def update(self):
-        """Перемещение камеры на заданное значение"""
-        self.position[0] += self.dx * self.pos_speed
-        self.position[1] += self.dy * self.pos_speed
-
-
-camera = Camera()
+# проверка нажатия кнопок
+left_pressed = False
+right_pressed = False
+up_pressed = False
+down_pressed = False
+turn_counterclockwise = False
+turn_clockwise = False
 
 # настройки стандартных элементов pygame
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -75,90 +72,184 @@ def hex_neighbor(hexagon: Hex, direction: int):
     """Возвращает следующую ячейку вдоль направления"""
     return hex_add(hexagon, hex_direction(direction))
 
+def hex_round(hexagon: Hex):
+    """Возвращает ближайшую ячейку к точке"""
+    q = int(round(hexagon.q))
+    r = int(round(hexagon.r))
+    s = int(round(-hexagon.q - hexagon.r))
+    q_diff = abs(q - hexagon.q)
+    r_diff = abs(r - hexagon.r)
+    s_diff = abs(s + hexagon.q + hexagon.r)
+    if q_diff > r_diff and q_diff > s_diff:
+        q = -r - s
+    elif r_diff > s_diff:
+        r = -q -s
+    else:
+        s = -q -r
+    return Hex(q, r)
+
+def lerp(a, b, t):
+    """Линейная интерполяция между двумя точками"""
+    return a + (b-a)*t
+
+def hex_lerp(a: Hex, b: Hex, t):
+    """Линейная интерполяция между двумя точками в шестиугольной системе координат"""
+    return Hex(lerp(a.q, b.q, t), lerp(a.r, b.r, t))
+
+def hex_linedraw(a: Hex, b: Hex):
+    """Выводит список из положений ячеек, расположенных между двумя точками"""
+    length = hex_distance(a, b)
+    # добавление значение epsilon для смещения крайней точки
+    a_nudge = Hex(a.q + 1e-06, a.r + 1e-06)
+    b_nudge = Hex(b.q + 1e-06, b.r + 1e-06)
+    results = []
+    step = 1/max(length, 1)
+    for i in range(0, length, step):
+        results.append(hex_round(hex_lerp(a_nudge, b_nudge, i)))
+    return results
+
+# Системы координат
 class Orientation:
-    """Хранит информацию о поворотных матриц и угол поворота ячеек"""
-    def __init__(self, f0, f1, f2, f3, b0, b1, b2, b3, start_angle):
+    """Хранит информацию о матрицах поворота и угла поворота ячеек"""
+    def __init__(self, matrix: np, angle):
         # матрица поворота
-        self.f0 = f0
-        self.f1 = f1
-        self.f2 = f2
-        self.f3 = f3
+        self.matrix = matrix
 
         # обратная матрица поворота
-        self.b0 = b0
-        self.b1 = b1
-        self.b2 = b2
-        self.b3 = b3
+        self._reverse = inv(matrix)
 
         # начальный угол поворота ячеек
-        self.start_angle = start_angle
+        self.angle = angle
+
+    @property
+    def reverse(self):
+        self._reverse = inv(self.matrix)
+        return self._reverse
+
+    @reverse.setter
+    def reverse(self, value: np):
+        self._reverse = value
 
 
 # стартовая ориентация ячеек
-layout_flat = Orientation(3/2, 0, math.sqrt(3)/2, math.sqrt(3),
-                          2/3, 0, -1/3, math.sqrt(3)/3,
+layout_flat = Orientation(np.array([[3/2, 0, 0],
+                                   [math.sqrt(3)/2, math.sqrt(3), 0],
+                                   [0, 0, 1]]),
                           0)
 
 class Layout:
-    """Хранит информацию об изначальной ориентации ячеек, их размер, и начало координат"""
+    """Система координат"""
     def __init__(self, start_orientation: Orientation, size, origin: Point):
-        self.start_orientation = start_orientation
-        self.size = size
-        self.origin = origin
+        self.orientation = start_orientation  # матрица поворота, обратная матрица
+        self.size = size  # размер ячеек
+        self.origin = origin  # начало координат
+
+        # масштабирование матрицы поворота
+        self.orientation.matrix *= size
+        self.orientation.matrix[2, 2] = 1
+
+    def translate(self, pos):
+        """Переместить систему координат вдоль осей x и y"""
+        dx, dy = pos
+        translate_matrix = np.array([[1, 0, dx * CAMERA_SPEED],
+                                     [0, 1, dy * CAMERA_SPEED],
+                                     [0, 0, 1]])
+        self.orientation.matrix = translate_matrix @ self.orientation.matrix
+
+    def rotate(self, angle):
+        """Повернуть систему координат на указанный угол"""
+        angle_rad = math.radians(angle) * ROTATION_SPEED
+        rotation_matrix = np.array([[math.cos(angle_rad), math.sin(angle_rad), 0],
+                                    [-math.sin(angle_rad), math.cos(angle_rad), 0],
+                                    [0, 0, 1]])
+        self.orientation.matrix = rotation_matrix @ self.orientation.matrix
+        self.orientation.angle += angle
+
+    def scale(self, scale):
+        """Отмасштабировать систему координат на указанное значение"""
+        scaling_matrix = np.array([[scale, 0, 0],
+                                  [0, scale, 0],
+                                  [0, 0, 1]])
+        self.size += scale
+        self.orientation.matrix = scaling_matrix @ self.orientation.matrix
+
+    def print(self):
+        print(self.orientation.matrix)
 
 
 # применяемая система координат (перемещение, масштабирование, начальное положение)
 LAYOUT = Layout(layout_flat, HEXAGON_SIZE, Point(WIDTH // 2, HEIGHT // 2))
 
+# Преобразования систем координат
 def hex_to_pixel(layout: Layout, hexagon: Hex):
     """Переводит из шестиугольной (Hexagonal) системы координат в экранную (2D) систему координат """
-    matrix = layout.start_orientation  # матрицы поворота
+    matrix = layout.orientation.matrix  # матрицы поворота
     size = layout.size  # размер ячеек
     origin = layout.origin  # начало координат
 
     # перемножение матриц
-    x = (matrix.f0 * hexagon.q + matrix.f1 * hexagon.r) * size
-    y = (matrix.f2 * hexagon.q + matrix.f3 * hexagon.r) * size
+    hexagon = np.array([hexagon.q, hexagon.r, 1])
+    pixel = matrix @ hexagon  # [x, y, 1]
 
-    return Point(x + origin.x, y + origin.y)
+    return Point(pixel[0] + origin.x, pixel[1] + origin.y)
 
-def pixel_to_hex(layout: Layout, pixel: Point):
+def pixel_to_hex(layout: Layout, p: Point):
     """Переводит из экранной (2D) системы координат в шестиугольную (Hexagonal) систему координат"""
-    matrix = layout.start_orientation  # матрицы поворота
+    rev_matrix = layout.orientation.reverse  # матрицы поворота
     size = layout.size  # размер ячеек
     origin = layout.origin  # начало координат
 
     # перемножение матриц
-    pt = Point((pixel.x - origin.x) / size, (pixel.y - origin.y) / size)
-    q = matrix.b0 * pt.x + matrix.b1 * pt.y
-    r = matrix.b2 * pt.x + matrix.b3 * pt.y
+    pt = np.array([[p.x - origin.x], [p.y - origin.y], [1]])
+    hex_pos = rev_matrix @ pt
 
-    return Hex(q, r)
+    return Hex(hex_pos[0, 0], hex_pos[1, 0])
 
-class HexCell:
-    def __init__(self, coordinate, color=Color(255, 192, 203)):
-        self.coordinate = coordinate
-        self.color = color
+class Cell:
+    """Класс Cell, содержащий всю информацию об ячейке шестиугольника"""
+    def __init__(self, coordinate, color=None):
+        self.corners = None  # положение вершин шестиугольника
+        self.coordinate = coordinate  # координата ячейки
+        if color is None:
+            self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        else:
+            self.color = color
 
-    def draw(self, screen, position, size):
-        pygame.draw.circle(screen, self.color, position, size)
-        pygame.draw.lines(screen, (0, 0, 0), True, self.pixels_corners(position, size))
+    def draw(self, scr, position,
+             layout: Layout,
+             selected=False):
+        """Отрисовка шестиугольника на экране"""
+        self.pixels_corners(position, layout)  # определение положения вершин шестиугольника
 
-    def pixels_corners(self, position, size):
-        corners = []
+        # изменение отображения клетки при наведении на нее
+        if selected:
+            pygame.draw.polygon(scr, 0, self.corners)
+        else:
+            pygame.draw.polygon(scr, self.color, self.corners)
+
+    def pixels_corners(self, position, layout):
+        """Возвращает список координат вершин треугольника"""
+        self.corners = []  # положение вершин шестиугольника
+        size, angle = layout.size, layout.orientation.angle
         x, y = position
 
         for i in range(6):
             angle_deg = 60 * i
-            angle_rad = math.pi / 180 * angle_deg
-            corners.append((x + size * math.cos(angle_rad), y + size * math.sin(angle_rad)))
+            angle_rad = math.radians(angle_deg)
+            self.corners.append((x + size * math.cos(angle_rad - math.radians(angle)),
+                                 y + size * math.sin(angle_rad - math.radians(angle))))
 
-        return corners
-
+        return self.corners
 
 def check_events():
     """Управление"""
     global running
+    global left_pressed
+    global right_pressed
+    global up_pressed
+    global down_pressed
+    global turn_counterclockwise
+    global turn_clockwise
 
     for event in pygame.event.get():
         # закрытие игры
@@ -168,52 +259,102 @@ def check_events():
         if event.type == pygame.KEYDOWN:
             # перемещение камеры
             if event.key == pygame.K_a or event.key == pygame.K_LEFT:
-                camera.dx = -1
-            elif event.key == pygame.K_d or event.key == pygame.K_RIGHT:
-                camera.dx = 1
-            elif event.key == pygame.K_w or event.key == pygame.K_UP:
-                camera.dy = -1
-            elif event.key == pygame.K_s or event.key == pygame.K_DOWN:
-                camera.dy = 1
+                left_pressed = True
+            if event.key == pygame.K_d or event.key == pygame.K_RIGHT:
+                right_pressed = True
+            if event.key == pygame.K_w or event.key == pygame.K_UP:
+                up_pressed = True
+            if event.key == pygame.K_s or event.key == pygame.K_DOWN:
+                down_pressed = True
+            if event.key == pygame.K_q:
+                turn_counterclockwise = True
+            if event.key == pygame.K_e:
+                turn_clockwise = True
 
         if event.type == pygame.KEYUP:
             # перемещение камеры
             if event.key == pygame.K_a or event.key == pygame.K_LEFT:
-                camera.dx = 0
-            elif event.key == pygame.K_d or event.key == pygame.K_RIGHT:
-                camera.dx = 0
-            elif event.key == pygame.K_w or event.key == pygame.K_UP:
-                camera.dy = 0
-            elif event.key == pygame.K_s or event.key == pygame.K_DOWN:
-                camera.dy = 0
+                left_pressed = False
+            if event.key == pygame.K_d or event.key == pygame.K_RIGHT:
+                right_pressed = False
+            if event.key == pygame.K_w or event.key == pygame.K_UP:
+                up_pressed = False
+            if event.key == pygame.K_s or event.key == pygame.K_DOWN:
+                down_pressed = False
+            if event.key == pygame.K_q:
+                turn_counterclockwise = False
+            if event.key == pygame.K_e:
+                turn_clockwise = False
+
+    # УПРАВЛЕНИЕ КАМЕРОЙ
+    # перемещение
+    if left_pressed and not right_pressed:
+        LAYOUT.translate((1, 0))
+    if right_pressed and not left_pressed:
+        LAYOUT.translate((-1, 0))
+    if up_pressed and not down_pressed:
+        LAYOUT.translate((0, 1))
+    if down_pressed and not up_pressed:
+        LAYOUT.translate((0, -1))
+    # вращение
+    if turn_clockwise and not turn_counterclockwise:
+        LAYOUT.rotate(-1)
+    if turn_counterclockwise and not turn_clockwise:
+        LAYOUT.rotate(1)
 
 def draw_grid(coordinates):
     """Отрисовка ячеек на экране"""
-    show_coord = True  # отображение координат шестиугольников
+    show_coord = True  # отображать координаты шестиугольников
+
+    # положение курсора
+    mouse_pixel_pos = Point(*pygame.mouse.get_pos())
+    mouse_hex_pos = hex_round(pixel_to_hex(LAYOUT, mouse_pixel_pos))
 
     # ОТРИСОВКА ЯЧЕЕК
     for coordinate, hexagon in coordinates.items():
         position = hex_to_pixel(LAYOUT, hexagon.coordinate)  # положение на экране
-        hexagon.draw(screen, position, HEXAGON_SIZE)  # отрисовка шестиугольника
+        if hexagon.coordinate == mouse_hex_pos:
+            hexagon.draw(screen, position, LAYOUT, selected=True)
+        else:
+            hexagon.draw(screen, position, LAYOUT)
 
-        if show_coord:  # отображение координат шестиугольников
+        # отображение координат шестиугольников
+        if show_coord:
             coord_text = font.render("{}, {}".format(*coordinate), False, WHITE)
             coord_text_rect = coord_text.get_rect()
             coord_text_rect.center = position
             screen.blit(coord_text, coord_text_rect)
 
-def main():
+    pygame.draw.line(screen, (255, 0, 0), hex_to_pixel(LAYOUT, Hex(0, 0)), hex_to_pixel(LAYOUT, Hex(2, -1)))
+    pygame.draw.line(screen, (0, 255, 0), hex_to_pixel(LAYOUT, Hex(0, 0)), hex_to_pixel(LAYOUT, Hex(-1, 2)))
 
-    # координаты существующих шестиугольников
+def generate_square_grid(width: int, height: int, coordinates: dict = {}, center: Hex = None):
+    """Генерация прямоугольной сетки"""
     coordinates = {}
+    grid_height = height - 1
 
-    # генератор сетки
-    for i in range(-4, 5):
-        for j in range(-4, 5):
-            pos = Hex(i, j)
-            coordinates[pos] = HexCell(pos, (random.randint(0, 255),
-                                             random.randint(0, 255),
-                                             random.randint(0, 255)))
+    # определение центра сетки
+    if center is None:
+        center = Hex(width // 2, grid_height // 2)
+
+    # генерация сетки
+    offset = 0
+    for col in range(width, 0, -1):
+        for row in range(int(offset)-1, int(offset) + grid_height):
+            hex_pos = Hex(col - center.q - 1, row - center.r - 1)
+            coordinates[hex_pos] = Cell(hex_pos)
+        offset += .5
+
+    return coordinates
+
+def main():
+    # координаты существующих шестиугольников
+    coordinates = {Hex(0, 0): Cell(Hex(0, 0)),
+                   Hex(1, 0): Cell(Hex(1, 0)),
+                   Hex(0, 1): Cell(Hex(0, 1)),
+                   Hex(1, 1): Cell(Hex(1, 1))}
+
+    coordinates = generate_square_grid(10, 6, coordinates)
 
     while running:
         clock.tick(FPS)
@@ -224,28 +365,9 @@ def main():
         screen.fill(BACKGROUND)
         draw_grid(coordinates)
         pygame.display.update()
-        print(camera.position)
-        camera.update()
 
     pygame.quit()
 
 
-def test():
-    def complain(name):
-        print("FAIL {0}".format(name))
-
-    def equal_hex(name, a, b):
-        if not (a.q == b.q and a.r == b.r):
-            complain(name)
-
-    def test_math():
-        equal_hex("hex_add", Hex(10, 5), hex_add(Hex(5, 7), Hex(5, -2)))
-        equal_hex("hex_sub", Hex(10, 5), hex_sub(Hex(12, 3), Hex(2, -2)))
-        equal_hex("hex_mul", Hex(10, 6), hex_multi(Hex(5, 3), Hex(2, 2)))
-
-    test_math()
-
-
 if __name__ == "__main__":
-    test()
     main()
