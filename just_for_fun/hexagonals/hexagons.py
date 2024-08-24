@@ -418,7 +418,7 @@ def main():
         screen.fill(BACKGROUND)
         draw_grid(coordinates)
         pygame.display.update()
-        print(clock.get_fps())
+        #print(clock.get_fps())
 
     pygame.quit()
 
