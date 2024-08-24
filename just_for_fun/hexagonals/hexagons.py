@@ -44,6 +44,11 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 font = pygame.font.SysFont("Arial", 14)
 
+# слои экрана
+layer_hex = pygame.Surface((WIDTH, HEIGHT))
+layer_lines = pygame.Surface((WIDTH, HEIGHT))
+layer_text = pygame.Surface((WIDTH, HEIGHT))
+
 # Hexagonal math
 def hex_add(a: Hex, b: Hex):
     """Сложение координат ячеек"""
@@ -84,9 +89,9 @@ def hex_round(hexagon: Hex):
     if q_diff > r_diff and q_diff > s_diff:
         q = -r - s
     elif r_diff > s_diff:
-        r = -q -s
+        r = -q - s
     else:
-        s = -q -r
+        s = -q - r
     return Hex(q, r)
 
 def lerp(a, b, t):
@@ -111,7 +116,7 @@ def hex_linedraw(a: Hex, b: Hex):
 
 # Системы координат
 class Orientation:
-    """Хранит информацию о матрицах поворота и угла поворота ячеек"""
+    """Хранит информацию о матрицах поворота и угле поворота ячеек"""
     def __init__(self, matrix: np, angle):
         # матрица поворота
         self.matrix = matrix
@@ -140,10 +145,9 @@ layout_flat = Orientation(np.array([[3/2, 0, 0],
 
 class Layout:
     """Система координат"""
-    def __init__(self, start_orientation: Orientation, size, origin: Point):
+    def __init__(self, start_orientation: Orientation, size):
         self.orientation = copy.deepcopy(start_orientation)  # матрица поворота, обратная матрица
         self.size = size  # размер ячеек
-        self.origin = origin  # начало координат
 
         # масштабирование матрицы поворота
         self.orientation.matrix *= size
@@ -171,26 +175,25 @@ class Layout:
         scaling_matrix = np.array([[scale, 0, 0],
                                   [0, scale, 0],
                                   [0, 0, 1]])
-        self.size += scale
+        self.size *= scale
         self.orientation.matrix = scaling_matrix @ self.orientation.matrix
 
-    def set_layout(self, orientation: Orientation, size, origin: Point):
+    def set_layout(self, orientation: Orientation, size):
         """Задание новой системы координат"""
-        self.__init__(orientation, size, origin)
+        self.__init__(orientation, size)
 
     def print(self):
         print(self.orientation.matrix)
 
 
 # применяемая система координат (перемещение, масштабирование, начальное положение)
-LAYOUT = Layout(layout_flat, HEXAGON_SIZE, Point(WIDTH // 2, HEIGHT // 2))
+LAYOUT = Layout(layout_flat, HEXAGON_SIZE)
 
 # Преобразования систем координат
 def hex_to_pixel(layout: Layout, hexagon: Hex):
     """Переводит из шестиугольной (Hexagonal) системы координат в экранную (2D) систему координат """
     matrix = layout.orientation.matrix  # матрицы поворота
-    size = layout.size  # размер ячеек
-    origin = layout.origin  # начало координат
+    origin = Point(WIDTH // 2, HEIGHT // 2)  # начало координат
 
     # перемножение матриц
     hexagon = np.array([hexagon.q, hexagon.r, 1])
@@ -201,12 +204,11 @@ def hex_to_pixel(layout: Layout, hexagon: Hex):
 def pixel_to_hex(layout: Layout, p: Point):
     """Переводит из экранной (2D) системы координат в шестиугольную (Hexagonal) систему координат"""
     rev_matrix = layout.orientation.reverse  # матрицы поворота
-    size = layout.size  # размер ячеек
-    origin = layout.origin  # начало координат
+    origin = Point(WIDTH // 2, HEIGHT // 2)  # начало координат
 
     # перемножение матриц
     pt = np.array([[p.x - origin.x], [p.y - origin.y], [1]])
-    hex_pos = rev_matrix @ pt
+    hex_pos = rev_matrix @ pt  # [q, r, 1]
 
     return Hex(hex_pos[0, 0], hex_pos[1, 0])
 
@@ -220,17 +222,16 @@ class Cell:
         else:
             self.color = color
 
-    def draw(self, scr, position,
-             layout: Layout,
-             selected=False):
+    def draw(self, position, layout: Layout, selected=False):
         """Отрисовка шестиугольника на экране"""
         self.pixels_corners(position, layout)  # определение положения вершин шестиугольника
 
         # изменение отображения клетки при наведении на нее
         if selected:
-            pygame.draw.polygon(scr, 0, self.corners)
+            pygame.draw.polygon(screen, 0, self.corners)
         else:
-            pygame.draw.polygon(scr, self.color, self.corners)
+            pygame.draw.polygon(screen, self.color, self.corners)
+            pygame.draw.aalines(screen, 0, False, self.corners[:4])
 
     def pixels_corners(self, position, layout):
         """Возвращает список координат вершин треугольника"""
@@ -278,7 +279,7 @@ def check_events():
 
             # возвращение на начальную клетку
             if event.key == pygame.K_h:
-                LAYOUT.set_layout(layout_flat, HEXAGON_SIZE, Point(WIDTH // 2, HEIGHT // 2))
+                LAYOUT.set_layout(layout_flat, HEXAGON_SIZE)
 
 
         if event.type == pygame.KEYUP:
@@ -346,9 +347,9 @@ def draw_grid(coordinates):
         if (BORDER - math.sqrt(3)*LAYOUT.size < position.y < HEIGHT - BORDER + math.sqrt(3)*LAYOUT.size
                 and BORDER - math.sqrt(3)*LAYOUT.size < position.x < WIDTH - BORDER + math.sqrt(3)*LAYOUT.size):
             if hexagon.coordinate == mouse_hex_pos:
-                hexagon.draw(screen, position, LAYOUT, selected=True)
+                hexagon.draw(position, LAYOUT, selected=True)
             else:
-                hexagon.draw(screen, position, LAYOUT)
+                hexagon.draw(position, LAYOUT)
 
             # отображение координат шестиугольников
             if show_coord:
@@ -393,12 +394,19 @@ def generate_hexagons_grid(radius: int, center: Hex = None):
         center = Hex(0, 0)
 
     # генерация сетки
-    for q in range (-radius, radius+1):
+    for q in range(-radius, radius+1):
         for r in range(max(-radius, -q-radius), min(radius, -q+radius)+1):
             hex_pos = Hex(q + center.q, r + center.r)
             coordinates[hex_pos] = Cell(hex_pos)
 
     return coordinates
+
+def update_screen():
+    """Отобразит объекты на экране в определенном порядке"""
+    screen.fill(BACKGROUND)
+    #screen.blit(layer_hex, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+    #screen.blit(layer_lines, (0, 0), special_flags=pygame.BLEND_RGBA_MAX)
+    pygame.display.update()
 
 def main():
     # координаты существующих шестиугольников
@@ -415,10 +423,14 @@ def main():
         check_events()  # управление и ивенты
 
         # ОТРИСОВКА И ОБНОВЛЕНИЕ ЭКРАНА
+
         screen.fill(BACKGROUND)
         draw_grid(coordinates)
+        #update_screen()
         pygame.display.update()
+
         #print(clock.get_fps())
+        #LAYOUT.print()
 
     pygame.quit()
 
