@@ -1,5 +1,5 @@
 import pygame
-import random, math
+import random, math, copy
 import numpy as np
 from numpy.linalg import inv
 from collections import namedtuple
@@ -22,6 +22,7 @@ WHITE = Color(255, 255, 255)
 # размер экрана
 WIDTH = 1600
 HEIGHT = 900
+BORDER = 150
 HEXAGON_SIZE = 50
 FPS = 60
 running = True
@@ -140,7 +141,7 @@ layout_flat = Orientation(np.array([[3/2, 0, 0],
 class Layout:
     """Система координат"""
     def __init__(self, start_orientation: Orientation, size, origin: Point):
-        self.orientation = start_orientation  # матрица поворота, обратная матрица
+        self.orientation = copy.deepcopy(start_orientation)  # матрица поворота, обратная матрица
         self.size = size  # размер ячеек
         self.origin = origin  # начало координат
 
@@ -172,6 +173,10 @@ class Layout:
                                   [0, 0, 1]])
         self.size += scale
         self.orientation.matrix = scaling_matrix @ self.orientation.matrix
+
+    def set_layout(self, orientation: Orientation, size, origin: Point):
+        """Задание новой системы координат"""
+        self.__init__(orientation, size, origin)
 
     def print(self):
         print(self.orientation.matrix)
@@ -271,6 +276,11 @@ def check_events():
             if event.key == pygame.K_e:
                 turn_clockwise = True
 
+            # возвращение на начальную клетку
+            if event.key == pygame.K_h:
+                LAYOUT.set_layout(layout_flat, HEXAGON_SIZE, Point(WIDTH // 2, HEIGHT // 2))
+
+
         if event.type == pygame.KEYUP:
             # перемещение камеры
             if event.key == pygame.K_a or event.key == pygame.K_LEFT:
@@ -302,6 +312,25 @@ def check_events():
     if turn_counterclockwise and not turn_clockwise:
         LAYOUT.rotate(1)
 
+# Функции, связанные с отображением объектов на экране
+def intersect_dict_and_set(d: dict, s: set):
+    """Возвращает часть словаря, с указанными ключами"""
+    return {key: d[key] for key in set(d) & s}
+
+def grid_border(coordinates: dict):
+    """Возвращает координаты ячеек, находящиеся на экране"""
+    screen_hex = set()  # положение всех ячеек на экране
+    radius = round(max(WIDTH//2 - BORDER, HEIGHT//2 - BORDER) / (math.sqrt(3) * LAYOUT.size) + 2.5)  # радиус генерируемой сетки
+    center = hex_round(pixel_to_hex(LAYOUT, Point(WIDTH // 2, HEIGHT // 2)))  # позиция ячейки в центре экрана
+
+    # генерация сетки в центре экрана
+    for q in range(-radius, radius + 1):
+        for r in range(max(-radius, -q - radius), min(radius, -q + radius) + 1):
+            hex_pos = Hex(q + center.q, r + center.r)
+            screen_hex.add(hex_pos)
+
+    return intersect_dict_and_set(coordinates, screen_hex)
+
 def draw_grid(coordinates):
     """Отрисовка ячеек на экране"""
     show_coord = True  # отображать координаты шестиугольников
@@ -311,24 +340,32 @@ def draw_grid(coordinates):
     mouse_hex_pos = hex_round(pixel_to_hex(LAYOUT, mouse_pixel_pos))
 
     # ОТРИСОВКА ЯЧЕЕК
-    for coordinate, hexagon in coordinates.items():
+    for coordinate, hexagon in grid_border(coordinates).items():
         position = hex_to_pixel(LAYOUT, hexagon.coordinate)  # положение на экране
-        if hexagon.coordinate == mouse_hex_pos:
-            hexagon.draw(screen, position, LAYOUT, selected=True)
-        else:
-            hexagon.draw(screen, position, LAYOUT)
+        # отображение объектов только в пределах экрана
+        if (BORDER - math.sqrt(3)*LAYOUT.size < position.y < HEIGHT - BORDER + math.sqrt(3)*LAYOUT.size
+                and BORDER - math.sqrt(3)*LAYOUT.size < position.x < WIDTH - BORDER + math.sqrt(3)*LAYOUT.size):
+            if hexagon.coordinate == mouse_hex_pos:
+                hexagon.draw(screen, position, LAYOUT, selected=True)
+            else:
+                hexagon.draw(screen, position, LAYOUT)
 
-        # отображение координат шестиугольников
-        if show_coord:
-            coord_text = font.render("{}, {}".format(*coordinate), False, WHITE)
-            coord_text_rect = coord_text.get_rect()
-            coord_text_rect.center = position
-            screen.blit(coord_text, coord_text_rect)
+            # отображение координат шестиугольников
+            if show_coord:
+                coord_text = font.render("{}, {}".format(*coordinate), False, WHITE)
+                coord_text_rect = coord_text.get_rect()
+                coord_text_rect.center = position
+                screen.blit(coord_text, coord_text_rect)
 
-    pygame.draw.line(screen, (255, 0, 0), hex_to_pixel(LAYOUT, Hex(0, 0)), hex_to_pixel(LAYOUT, Hex(2, -1)))
-    pygame.draw.line(screen, (0, 255, 0), hex_to_pixel(LAYOUT, Hex(0, 0)), hex_to_pixel(LAYOUT, Hex(-1, 2)))
+    # ось q
+    pygame.draw.line(screen, (255, 0, 0), hex_to_pixel(LAYOUT, Hex(0, 0)), hex_to_pixel(LAYOUT, Hex(1, 0)))
+    # ось r
+    pygame.draw.line(screen, (0, 255, 0), hex_to_pixel(LAYOUT, Hex(0, 0)), hex_to_pixel(LAYOUT, Hex(0, 1)))
+    # границы экрана
+    pygame.draw.rect(screen, 0, (BORDER, BORDER, WIDTH-2*BORDER, HEIGHT-2*BORDER), 3)
 
-def generate_square_grid(width: int, height: int, coordinates: dict = {}, center: Hex = None):
+# Генерация поля
+def generate_square_grid(width: int, height: int, center: Hex = None):
     """Генерация прямоугольной сетки"""
     coordinates = {}
     grid_height = height - 1
@@ -347,6 +384,22 @@ def generate_square_grid(width: int, height: int, coordinates: dict = {}, center
 
     return coordinates
 
+def generate_hexagons_grid(radius: int, center: Hex = None):
+    """Генерация сетки в форме шестиугольника"""
+    coordinates = {}
+
+    # определение центра сетки
+    if center is None:
+        center = Hex(0, 0)
+
+    # генерация сетки
+    for q in range (-radius, radius+1):
+        for r in range(max(-radius, -q-radius), min(radius, -q+radius)+1):
+            hex_pos = Hex(q + center.q, r + center.r)
+            coordinates[hex_pos] = Cell(hex_pos)
+
+    return coordinates
+
 def main():
     # координаты существующих шестиугольников
     coordinates = {Hex(0, 0): Cell(Hex(0, 0)),
@@ -354,7 +407,7 @@ def main():
                    Hex(0, 1): Cell(Hex(0, 1)),
                    Hex(1, 1): Cell(Hex(1, 1))}
 
-    coordinates = generate_square_grid(10, 6, coordinates)
+    coordinates = generate_square_grid(60, 60)
 
     while running:
         clock.tick(FPS)
@@ -365,6 +418,7 @@ def main():
         screen.fill(BACKGROUND)
         draw_grid(coordinates)
         pygame.display.update()
+        print(clock.get_fps())
 
     pygame.quit()
 
