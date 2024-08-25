@@ -23,13 +23,17 @@ WHITE = Color(255, 255, 255)
 WIDTH = 1600
 HEIGHT = 900
 BORDER = 150
+
+# Константы
 HEXAGON_SIZE = 50
 FPS = 60
 running = True
+sqrt3 = math.sqrt(3)
 
-#
+# скорость перемещения камеры
 CAMERA_SPEED = 12
 ROTATION_SPEED = 1
+SCALE_SPEED = 1/20
 
 # проверка нажатия кнопок
 left_pressed = False
@@ -139,7 +143,7 @@ class Orientation:
 
 # стартовая ориентация ячеек
 layout_flat = Orientation(np.array([[3/2, 0, 0],
-                                   [math.sqrt(3)/2, math.sqrt(3), 0],
+                                   [sqrt3/2, sqrt3, 0],
                                    [0, 0, 1]]),
                           0)
 
@@ -215,6 +219,7 @@ def pixel_to_hex(layout: Layout, p: Point):
 class Cell:
     """Класс Cell, содержащий всю информацию об ячейке шестиугольника"""
     def __init__(self, coordinate, color=None):
+        #pygame.sprite.Sprite.__init__(self)
         self.corners = None  # положение вершин шестиугольника
         self.coordinate = coordinate  # координата ячейки
         if color is None:
@@ -247,6 +252,8 @@ class Cell:
 
         return self.corners
 
+#cells = pygame.sprite.Group()
+
 def check_events():
     """Управление"""
     global running
@@ -262,6 +269,7 @@ def check_events():
         if event.type == pygame.QUIT:
             running = False
 
+        # нажатие клавиши
         if event.type == pygame.KEYDOWN:
             # перемещение камеры
             if event.key == pygame.K_a or event.key == pygame.K_LEFT:
@@ -281,7 +289,7 @@ def check_events():
             if event.key == pygame.K_h:
                 LAYOUT.set_layout(layout_flat, HEXAGON_SIZE)
 
-
+        # отжатие клавиши
         if event.type == pygame.KEYUP:
             # перемещение камеры
             if event.key == pygame.K_a or event.key == pygame.K_LEFT:
@@ -296,6 +304,12 @@ def check_events():
                 turn_counterclockwise = False
             if event.key == pygame.K_e:
                 turn_clockwise = False
+
+        # вращение колесика мыши
+        if event.type == pygame.MOUSEWHEEL:
+            # приближение/отдаление камеры
+            LAYOUT.scale(1 + event.y * SCALE_SPEED)
+
 
     # УПРАВЛЕНИЕ КАМЕРОЙ
     # перемещение
@@ -320,21 +334,22 @@ def intersect_dict_and_set(d: dict, s: set):
 
 def grid_border(coordinates: dict):
     """Возвращает координаты ячеек, находящиеся на экране"""
-    screen_hex = set()  # положение всех ячеек на экране
-    radius = round(max(WIDTH//2 - BORDER, HEIGHT//2 - BORDER) / (math.sqrt(3) * LAYOUT.size) + 2.5)  # радиус генерируемой сетки
+    radius = round(max(WIDTH//2 - BORDER, HEIGHT//2 - BORDER) / (sqrt3 * LAYOUT.size) + 2.5)  # радиус генерируемой сетки
     center = hex_round(pixel_to_hex(LAYOUT, Point(WIDTH // 2, HEIGHT // 2)))  # позиция ячейки в центре экрана
+    screen_coord = {}
 
     # генерация сетки в центре экрана
     for q in range(-radius, radius + 1):
         for r in range(max(-radius, -q - radius), min(radius, -q + radius) + 1):
             hex_pos = Hex(q + center.q, r + center.r)
-            screen_hex.add(hex_pos)
+            if hex_pos in coordinates:
+                screen_coord[hex_pos] = coordinates[hex_pos]
 
-    return intersect_dict_and_set(coordinates, screen_hex)
+    return screen_coord
 
 def draw_grid(coordinates):
     """Отрисовка ячеек на экране"""
-    show_coord = True  # отображать координаты шестиугольников
+    show_coord = False  # отображать координаты шестиугольников
 
     # положение курсора
     mouse_pixel_pos = Point(*pygame.mouse.get_pos())
@@ -344,13 +359,13 @@ def draw_grid(coordinates):
     for coordinate, hexagon in grid_border(coordinates).items():
         position = hex_to_pixel(LAYOUT, hexagon.coordinate)  # положение на экране
         # отображение объектов только в пределах экрана
-        if (BORDER - math.sqrt(3)*LAYOUT.size < position.y < HEIGHT - BORDER + math.sqrt(3)*LAYOUT.size
-                and BORDER - math.sqrt(3)*LAYOUT.size < position.x < WIDTH - BORDER + math.sqrt(3)*LAYOUT.size):
+        if (BORDER - sqrt3*LAYOUT.size < position.y < HEIGHT - BORDER + sqrt3*LAYOUT.size
+                and BORDER - sqrt3*LAYOUT.size < position.x < WIDTH - BORDER + sqrt3*LAYOUT.size):
             if hexagon.coordinate == mouse_hex_pos:
+                #cells.add(hexagon)
                 hexagon.draw(position, LAYOUT, selected=True)
             else:
                 hexagon.draw(position, LAYOUT)
-
             # отображение координат шестиугольников
             if show_coord:
                 coord_text = font.render("{}, {}".format(*coordinate), False, WHITE)
@@ -406,6 +421,7 @@ def update_screen():
     screen.fill(BACKGROUND)
     #screen.blit(layer_hex, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
     #screen.blit(layer_lines, (0, 0), special_flags=pygame.BLEND_RGBA_MAX)
+    #cells.draw(screen)
     pygame.display.update()
 
 def main():
@@ -418,7 +434,7 @@ def main():
     coordinates = generate_square_grid(60, 60)
 
     while running:
-        clock.tick(FPS)
+        clock.tick()
 
         check_events()  # управление и ивенты
 
@@ -429,7 +445,7 @@ def main():
         #update_screen()
         pygame.display.update()
 
-        #print(clock.get_fps())
+        print(clock.get_fps())
         #LAYOUT.print()
 
     pygame.quit()
