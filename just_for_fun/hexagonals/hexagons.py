@@ -345,11 +345,12 @@ def grid_border(coordinates: dict):
             if hex_pos in coordinates:
                 screen_coord[hex_pos] = coordinates[hex_pos]
 
+    print(f"Размер словаря - {len(screen_coord)} объектов")
     return screen_coord
 
 def draw_grid(coordinates):
     """Отрисовка ячеек на экране"""
-    show_coord = False  # отображать координаты шестиугольников
+    show_coord = True  # отображать координаты шестиугольников
 
     # положение курсора
     mouse_pixel_pos = Point(*pygame.mouse.get_pos())
@@ -445,7 +446,7 @@ def main():
         #update_screen()
         pygame.display.update()
 
-        print(clock.get_fps())
+        print("FPS:", clock.get_fps())
         #LAYOUT.print()
 
     pygame.quit()
