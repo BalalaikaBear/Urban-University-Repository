@@ -345,7 +345,7 @@ def grid_border(coordinates: dict):
             if hex_pos in coordinates:
                 screen_coord[hex_pos] = coordinates[hex_pos]
 
-    print(f"Размер словаря - {len(screen_coord)} объектов")
+    #print(f"Размер словаря - {len(screen_coord)} объектов")
     return screen_coord
 
 def draw_grid(coordinates):
@@ -446,7 +446,7 @@ def main():
         #update_screen()
         pygame.display.update()
 
-        print("FPS:", clock.get_fps())
+        #print("FPS:", clock.get_fps())
         #LAYOUT.print()
 
     pygame.quit()
