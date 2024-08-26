@@ -23,6 +23,7 @@ WHITE = Color(255, 255, 255)
 WIDTH = 1600
 HEIGHT = 900
 BORDER = 150
+ORIGIN = Point(WIDTH // 2, HEIGHT // 2)
 
 # Константы
 HEXAGON_SIZE = 50
@@ -197,21 +198,19 @@ LAYOUT = Layout(layout_flat, HEXAGON_SIZE)
 def hex_to_pixel(layout: Layout, hexagon: Hex):
     """Переводит из шестиугольной (Hexagonal) системы координат в экранную (2D) систему координат """
     matrix = layout.orientation.matrix  # матрицы поворота
-    origin = Point(WIDTH // 2, HEIGHT // 2)  # начало координат
 
     # перемножение матриц
     hexagon = np.array([hexagon.q, hexagon.r, 1])
     pixel = matrix @ hexagon  # [x, y, 1]
 
-    return Point(pixel[0] + origin.x, pixel[1] + origin.y)
+    return Point(pixel[0] + ORIGIN.x, pixel[1] + ORIGIN.y)
 
 def pixel_to_hex(layout: Layout, p: Point):
     """Переводит из экранной (2D) системы координат в шестиугольную (Hexagonal) систему координат"""
     rev_matrix = layout.orientation.reverse  # матрицы поворота
-    origin = Point(WIDTH // 2, HEIGHT // 2)  # начало координат
 
     # перемножение матриц
-    pt = np.array([[p.x - origin.x], [p.y - origin.y], [1]])
+    pt = np.array([[p.x - ORIGIN.x], [p.y - ORIGIN.y], [1]])
     hex_pos = rev_matrix @ pt  # [q, r, 1]
 
     return Hex(hex_pos[0, 0], hex_pos[1, 0])
@@ -335,7 +334,7 @@ def intersect_dict_and_set(d: dict, s: set):
 def grid_border(coordinates: dict):
     """Возвращает координаты ячеек, находящиеся на экране"""
     radius = round(max(WIDTH//2 - BORDER, HEIGHT//2 - BORDER) / (sqrt3 * LAYOUT.size) + 2.5)  # радиус генерируемой сетки
-    center = hex_round(pixel_to_hex(LAYOUT, Point(WIDTH // 2, HEIGHT // 2)))  # позиция ячейки в центре экрана
+    center = hex_round(pixel_to_hex(LAYOUT, ORIGIN))  # позиция ячейки в центре экрана
     screen_coord = {}
 
     # генерация сетки в центре экрана
@@ -446,7 +445,7 @@ def main():
         #update_screen()
         pygame.display.update()
 
-        #print("FPS:", clock.get_fps())
+        print("FPS:", clock.get_fps())
         #LAYOUT.print()
 
     pygame.quit()
