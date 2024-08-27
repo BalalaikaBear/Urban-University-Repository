@@ -323,3 +323,74 @@ class Multiplier:
 by_101 = Multiplier(101)
 print("154:", by_101(5))  # 5 * 100
 print("154.1:", list(map(by_101, numbers)))
+
+# Итераторы
+# __iter__(self) - получение итератора для перебора объекта
+# __next__(self) - переход к следующему значению и его считывание
+class Iter:
+    def __init__(self):
+        self.first = "Первый элемент"
+        self.second = "Второй элемент"
+        self.third = "Третий элемент"
+        self.i = 0
+
+    def __iter__(self):
+        # обнуляем счетчик перед циклом
+        self.i = 0
+        # возвращаем ссылку на себя, т.к. сам объект должен быть итератором
+        return self
+
+    def __next__(self):
+        # этот метод возвращает значения по требованию python (ленивые вычисления)
+        self.i += 1
+        if self.i == 1:
+            return self.first
+        elif self.i == 2:
+            return self.second
+        elif self.i == 3:
+            return self.third
+        elif self.i == 4:
+            return "Подсчет закончен"
+        raise StopIteration()  # признак того, что больше возвращать нечего
+
+for value in Iter():        # интерпретатор вызывает метод __next__ при каждом проходе цикла
+    print("160.a:", value)  # если в __next__ возникает исключение StopIteration - значит в объекте больше нет элементов - цикл прекращается
+
+obj = Iter()
+try:  # представление цикла for через исключение StopIteration
+    while True:
+        value = obj.__next__()
+        print("160.b:", value)
+except StopIteration:
+    print("160.b: Цикл for закончен")
+
+# числа Фибоначчи
+def fibonacci(n):
+    result = []
+    a, b = 0, 1
+    for _ in range(n):
+        result.append(a)
+        a, b = b, a+b
+    return result
+
+print("161:", end=" ")
+for value in fibonacci(n=10):
+    print(value, end=" ")
+
+class Fibonacci:
+    def __init__(self, n):
+        self.i, self.a, self.b, self.n = 0, 0, 1, n
+    def __iter__(self):
+        self.i, self.a, self.b = 0, 0, 1
+        return self
+    def __next__(self):
+        self.i += 1
+        if self.i > 1:
+            if self.i > self.n:
+                raise StopIteration
+            self.a, self.b = self.b, self.a + self.b
+        return self.a
+
+print("\n162:", end=" ")
+for value in Fibonacci(30):
+    print(value, end=" ")
