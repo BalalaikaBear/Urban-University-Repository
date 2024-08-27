@@ -259,3 +259,67 @@ result = (x**100 for x in numbers)
 print("148:", result, type(result))
 for elem in result:
     print("148.a:", elem)
+
+# анонимная функция lambda, она имеет ограниченное применение:
+# - она создается в процессе выполнения кода (а не при компиляции) и может просадить быстродействие
+# - она плохо сериализуется - могут быть проблемы в крупных фреймворках
+# - лямбда функция не имеет имени, т.е. на нее нельзя ссылаться
+my_func = lambda x: x+10
+print("150:", my_func, type(my_func), list(map(my_func, numbers)), my_func.__name__)
+
+# создание функции внутри функции
+def get_multiplier_v1(n):  # get_multiplier_v1 - функция высшего порядка, она возвращает функции
+    if n == 2:
+        def multiplier(x):
+            return x * 2
+
+    elif n == 3:
+        def multiplier(x):
+            return x * 3
+
+    else:
+        raise Exception("Я могу только умножать на 2 или 3!")
+
+    return multiplier
+
+by_2 = get_multiplier_v1(2)
+by_3 = get_multiplier_v1(3)
+
+print("151:", list(map(by_2, numbers)))
+print("151.1:", list(map(by_3, numbers)))
+
+def get_multiplier_v2(n):
+    def multiplier(x):
+        return x * n
+    return multiplier
+
+by_5 = get_multiplier_v2(5)
+print("153:", by_5(x=42))  # 42 * 5
+
+by_10 = get_multiplier_v2(10)
+by_100 = get_multiplier_v2(100)
+print("153.1", list(map(by_10, numbers)))
+print("153.2", list(map(by_100, numbers)))
+
+# пример создания матрицы
+def matrix(some_list):
+    def multiply_column(x):
+        res = []
+        for element in some_list:
+            res.append(element * x)
+        return res
+    return multiply_column
+
+print(list(map(matrix(numbers), numbers_2)))
+
+# создание объекта, который можно вызвать
+class Multiplier:
+    def __init__(self, n):
+        self.n = n
+    def __call__(self, x):
+        # если есть такой метод у класса, то его объект можно вызывать как функцию
+        return x * self.n
+
+by_101 = Multiplier(101)
+print("154:", by_101(5))  # 5 * 100
+print("154.1:", list(map(by_101, numbers)))
