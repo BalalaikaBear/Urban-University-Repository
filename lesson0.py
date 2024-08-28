@@ -396,6 +396,7 @@ for value in Fibonacci(30):
     print(value, end=" ")
 print()
 
+
 # Генераторы
 def func_generator(n):  # возвращает элементы от 0 до n не включительно
     i = 0
@@ -430,5 +431,49 @@ def read_file(file_path):
 
 #for line in read_file("1.txt"):
 #    print(line)
+
+
+# Декораторы
+# - обертка вокруг функции, которая меняет способ работы этой функции.
+# - это функция, которая принимает другую функцию в качестве аргумента и возвращает третью
+# декоратор ОБЯЗАТЕЛЬНО должен возвращать функцию
+def uppercase(func):
+    def wrapper():
+        original_result = func()
+        modified_result = original_result.upper()
+        return modified_result  # возвращает str
+    return wrapper  # возвращает функцию wrapper
+def greet():
+    return "Hello!"
+greet = uppercase(greet)  # к функции greet добавлен декоратор null_decorator
+
+@uppercase  # к функции greet добавлен декоратор null_decorator
+def greet():
+    return "Hello!"
+
+print("170:", greet())  # срабатывает декоратор @uppercase, который меняет выходное значение из функции greet()
+
+# пример использования декоратора
+import sys, time
+def time_track(func):  # выводит время выполнения функции
+    def surrogate(*args, **kwargs):
+        started_at = time.time()
+        result = func(*args, **kwargs)  # вызов функции
+        ended_at = time.time()
+        elapsed = round(ended_at - started_at, 4)
+        print(f"Функция работала {elapsed} секунд(ы)")
+        return result
+    return surrogate
+
+@time_track
+def digits(*args):
+    total = 1
+    for number in args:
+        total *= number ** 5000
+    return len(str(total))
+
+sys.set_int_max_str_digits(100000)  # увеличивает максимальную длину строки
+
+print("171:", digits(3141, 5926, 2718, 2818))
 
 
