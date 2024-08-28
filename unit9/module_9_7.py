@@ -1,19 +1,19 @@
-import math, random
+import random
 
 def is_prime(func):
     def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
+        func_result = func(*args, **kwargs)
 
-        if result == 2:
+        n = 0
+        for i in range(2, func_result // 2+1):
+            if func_result % i == 0:
+                n += 1
+        if n == 0:
             print("Простое")
-        for i in range(2, int(math.sqrt(result))+1):
-            if result % i == 0:
-                print("Составное")
-                break
-            else:
-                print("Простое")
-                break
-        return result
+        else:
+            print("Составное")
+
+        return func_result
     return wrapper
 
 @is_prime
