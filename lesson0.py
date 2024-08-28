@@ -364,7 +364,7 @@ try:  # представление цикла for через исключени�
 except StopIteration:
     print("160.b: Цикл for закончен")
 
-# числа Фибоначчи
+# числа Фибоначчи через итератор
 def fibonacci(n):
     result = []
     a, b = 0, 1
@@ -394,3 +394,41 @@ class Fibonacci:
 print("\n162:", end=" ")
 for value in Fibonacci(30):
     print(value, end=" ")
+print()
+
+# Генераторы
+def func_generator(n):  # возвращает элементы от 0 до n не включительно
+    i = 0
+    while i != n:
+        yield i  # yield возвращает переменную
+        i += 1
+
+obj = func_generator(10)
+print("165:", obj)  # <generator object func_generator at 0x000001F1CB81D840>
+
+print("166:", end=" ")
+for i in obj:
+    print(i, end=" ")
+
+# генератор числа Фибоначчи через yield
+def fibonacci_yield(n):
+    a, b = 0, 1
+    for _ in range(n):
+        yield a
+        a, b = b, a + b
+
+print("\n167:", end=" ")
+for value in fibonacci_yield(30):
+    print(value, end=" ")
+print()
+
+# открытие файла через итератор. В памяти данные сохраняться не будут
+def read_file(file_path):
+    with open(file_path, "r", encoding="utf-8") as file:
+        for line in file:
+            yield line.strip()
+
+#for line in read_file("1.txt"):
+#    print(line)
+
+
