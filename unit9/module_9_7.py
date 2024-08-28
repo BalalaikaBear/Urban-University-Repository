@@ -21,5 +21,7 @@ def sum_three(*numbers):
     return sum(numbers)
 
 
-result = sum_three(random.randint(1, 100), random.randint(1, 100), random.randint(1, 100))
+result = sum_three(random.randint(1, 100),
+                   random.randint(1, 100),
+                   random.randint(1, 100))
 print(result)
