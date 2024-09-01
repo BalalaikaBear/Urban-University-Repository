@@ -476,4 +476,25 @@ sys.set_int_max_str_digits(100000)  # увеличивает максималь�
 
 print("171:", digits(3141, 5926, 2718, 2818))
 
+# функция, возвращающая декоратор
+def func_gen_dec(precision):
+    def dec(func):  # сам декоратор
+        def surrogate(*args, **kwargs):
+            started_at = time.time()
+            result = func(*args, **kwargs)  # вызов функции
+            ended_at = time.time()
+            elapsed = round(ended_at - started_at, precision)
+            print(f"Функция работала {elapsed} секунд(ы)")
+            return result
+        return surrogate
+    return dec
 
+def digits(*args):
+    total = 1
+    for number in args:
+        total *= number ** 5000
+    return len(str(total))
+
+time_track_precision_2 = func_gen_dec(2)  # precision = 2
+digits = time_track_precision_2(digits)  # навеска декоратора
+print("172:", digits(3141, 5926, 2718, 2818))
