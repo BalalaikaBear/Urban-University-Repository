@@ -1,4 +1,4 @@
-from threading import Thread
+from threading import Thread  # мультипоточность
 from datetime import datetime
 import time
 
@@ -9,6 +9,7 @@ def write_words(word_count, file_name):
             time.sleep(0.1)
     print(f"Завершилась запись в файл {file_name}")
 
+
 # Поочередная работа функций
 time_start = datetime.now()
 
@@ -17,17 +18,21 @@ for index, count in enumerate([10, 30, 200, 100]):
 
 print(f"Поочередная работа функций: {datetime.now() - time_start}")
 
+
 # Работа потоков
 threads = []
 for index, count in enumerate([10, 30, 200, 100]):
+    # Создание потока,
+    # <target> - функция, которая будет выполняться
+    # <args> - аргументы, которые будут переданы
     threads.append(Thread(target=write_words, args=(count, f"example{index+5}.txt")))
 
 time_start = datetime.now()
 
 for thread in threads:
-    thread.start()
+    thread.start()  # запуск потока
 
 for thread in threads:
-    thread.join()
+    thread.join()  # останавливает дальнейшее выполнение программы, пока не выполнится поток
 
 print(f"Работа потоков: {datetime.now() - time_start}")
