@@ -19,8 +19,8 @@ def main():
     global x
     x = 0
 
-    t1 = Thread(target=thread_task())
-    t2 = Thread(target=thread_task())
+    t1 = Thread(target=thread_task)
+    t2 = Thread(target=thread_task)
 
     t1.start()
     t2.start()
@@ -76,8 +76,24 @@ def thread_task2():
         with lock1:
             print('thread 2 locked 1 acquired')
 
-t1 = Thread(target=thread_task1())
-t2 = Thread(target=thread_task2())
+t1 = Thread(target=thread_task1)
+t2 = Thread(target=thread_task2)
+
+t1.start()
+t2.start()
+
+t1.join()
+t2.join()
+
+
+# GIL - Global Interpreter Lock - Глобальная блокировка интерпретатора
+# при торможении потока на 15 миллисекунд GIL считает другой поток
+def count_up(name, n):
+    for i in range(n):
+        print(name, i, sep=': ')
+
+t1 = Thread(target=count_up, args=('Thread_1', 25))
+t2 = Thread(target=count_up, args=('Thread_2', 35))
 
 t1.start()
 t2.start()
