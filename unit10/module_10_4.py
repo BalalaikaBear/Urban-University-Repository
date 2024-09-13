@@ -67,6 +67,7 @@ class Cafe:
                 if not table.is_free() and not table.guest.is_alive():  # добавлена проверка на занятость стола, иначе ошибка (2-е условие не проверяется)
                     print(f'{h(table.guest.name, 'p')} покушал(-а) и ушёл(ушла)')
                     print(f'Стол номер {h(table.number)} {h('свободен')}, осталось гостей: {h(eating_guests - 1)}')
+                    table.guest.join()  # завершение потока
                     table.guest = None  # освобождение столика
                     eating_guests -= 1  # посетитель обслужен
 
