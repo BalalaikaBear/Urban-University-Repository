@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
     # with multiprocessing
     start = datetime.now()
-    with multiprocessing.Pool(processes=4) as pool:
+    with multiprocessing.Pool(processes=len(files)) as pool:
         pool.map(read_info, files)
     end = datetime.now()
     print('With multiprocessing:   ', end - start)
