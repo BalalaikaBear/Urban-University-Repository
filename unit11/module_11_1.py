@@ -2,31 +2,35 @@ import multiprocessing
 import numpy as np
 import math
 from datetime import datetime
+from collections import namedtuple
 
-# With multiprocessing: 0:00:02.448328 [787.88645946 576.77291892   1.        ]
-# Without multiprocessing: 0:00:03.094564 [787.88645946 576.77291892   1.        ]
+# With multiprocessing: 0:00:03.930021 Point(x=np.float64(787.886459460218), y=np.float64(576.7729189204362))
+# Without multiprocessing: 0:00:04.589978 Point(x=np.float64(787.886459460218), y=np.float64(576.7729189204362))
 
 
 sqrt3 = math.sqrt(3)
+Hex = namedtuple('Hex', ['q', 'r'])
+Point = namedtuple('Point', ['x', 'y'])
 orientation = np.array([[3 / 2, 0, 0],
                         [sqrt3 / 2, sqrt3, 0],
                         [0, 0, 1]])
 
 
-def matrix_basis(points):
-    return np.array([points[0], points[1], 1]) @ orientation
+def matrix_basis(position: Hex):
+    matrix = np.array([position.q, position.r, 1]) @ orientation
+    return Point(matrix[0], matrix[1])
 
 
 if __name__ == '__main__':  # необходимо, чтобы мультипроцесс не запускал сам себя
     # создание списка координат
-    positions = [(x, y) for x in range(1000) for y in range(1000)]
+    positions: list[Hex] = [Hex(q, r) for q in range(1000) for r in range(1000)]
 
     # использование нескольких процессов
     start = datetime.now()
     with multiprocessing.Pool(processes=4) as pool:  # <processes> - количество процессов
 
         # аналогично map, но разбиением на процессы
-        A = pool.map(matrix_basis, positions)
+        A: list[Point] = pool.map(matrix_basis, positions)
         # 1-й аргумент - функция
         # 2+ аргументы - итерируемые объекты, поступающие в функцию
 
@@ -35,6 +39,6 @@ if __name__ == '__main__':  # необходимо, чтобы мультипр�
 
     # использование одного потока
     start = datetime.now()
-    B = list(map(matrix_basis, positions))
+    B: list[Point] = list(map(matrix_basis, positions))
     end = datetime.now()
     print('Without multiprocessing:', end - start, B[len(positions) // 3])
