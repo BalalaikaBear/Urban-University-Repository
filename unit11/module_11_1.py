@@ -11,8 +11,8 @@ sqrt3 = math.sqrt(3)
 Hex = namedtuple('Hex', ['q', 'r'])
 Point = namedtuple('Point', ['x', 'y'])
 orientation = numpy.array([[3 / 2, 0, 0],
-                        [sqrt3 / 2, sqrt3, 0],
-                        [0, 0, 1]])
+                          [sqrt3 / 2, sqrt3, 0],
+                          [0, 0, 1]])
 
 def change_basis(position: Hex):
     """Замена базиса"""
