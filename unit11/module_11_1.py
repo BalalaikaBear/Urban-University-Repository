@@ -7,7 +7,6 @@ from collections import namedtuple
 # With multiprocessing: 0:00:03.930021 Point(x=np.float64(787.886459460218), y=np.float64(576.7729189204362))
 # Without multiprocessing: 0:00:04.589978 Point(x=np.float64(787.886459460218), y=np.float64(576.7729189204362))
 
-
 sqrt3 = math.sqrt(3)
 Hex = namedtuple('Hex', ['q', 'r'])
 Point = namedtuple('Point', ['x', 'y'])
@@ -15,8 +14,8 @@ orientation = np.array([[3 / 2, 0, 0],
                         [sqrt3 / 2, sqrt3, 0],
                         [0, 0, 1]])
 
-
 def change_basis(position: Hex):
+    """Замена базиса"""
     matrix = np.array([position.q, position.r, 1]) @ orientation
     return Point(matrix[0], matrix[1])
 
