@@ -16,7 +16,7 @@ orientation = np.array([[3 / 2, 0, 0],
                         [0, 0, 1]])
 
 
-def matrix_basis(position: Hex):
+def change_basis(position: Hex):
     matrix = np.array([position.q, position.r, 1]) @ orientation
     return Point(matrix[0], matrix[1])
 
@@ -30,7 +30,7 @@ if __name__ == '__main__':  # необходимо, чтобы мультипр�
     with multiprocessing.Pool(processes=4) as pool:  # <processes> - количество процессов
 
         # аналогично map, но разбиением на процессы
-        A: list[Point] = pool.map(matrix_basis, positions)
+        A: list[Point] = pool.map(change_basis, positions)
         # 1-й аргумент - функция
         # 2+ аргументы - итерируемые объекты, поступающие в функцию
 
@@ -39,6 +39,6 @@ if __name__ == '__main__':  # необходимо, чтобы мультипр�
 
     # использование одного потока
     start = datetime.now()
-    B: list[Point] = list(map(matrix_basis, positions))
+    B: list[Point] = list(map(change_basis, positions))
     end = datetime.now()
     print('Without multiprocessing:', end - start, B[len(positions) // 3])
