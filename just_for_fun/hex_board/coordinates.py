@@ -1,11 +1,14 @@
 import copy, math, numpy
 from numbers import Real  # real numbers as a type
 from numpy.linalg import inv
-from settings import Camera, Screen, Settings
+from settings import *
 
 # Сокращение записи типов объектов
 type Hex[q, r] = tuple[Real, Real]
 type Point[x, y] = tuple[Real, Real]
+
+# Константы
+sqrt3: float = math.sqrt(3)
 
 # Кортеж из положений соседних ячеек по часовой стрелке
 HEX_DIRECTIONS: tuple = ((1, 0), (1, -1), (0, -1),
@@ -138,7 +141,7 @@ def hex_round(hexagon: Hex) -> Hex:
         s = -q - r
     return q, r
 
-def lerp(a: int | float, b: int | float, t: float) -> float:
+def lerp(a: Real, b: Real, t: float) -> float:
     """Линейная интерполяция между двумя точками"""
     return a + (b - a) * t
 
@@ -172,3 +175,13 @@ def pixel_to_hex(layout, p: Hex, origin: Point) -> Hex:
                                                         [p[1] - origin[1]],
                                                         [1]])
     return hex_pos[0, 0], hex_pos[1, 0]
+
+# стартовая ориентация ячеек
+layout_flat = Orientation(numpy.array([[3/2, 0, 0],
+                                      [sqrt3/2, sqrt3, 0],
+                                      [0, 0, 1]]),
+                          angle=0,
+                          size=30)
+
+# применяемая система координат (перемещение, масштабирование, начальное положение)
+LAYOUT = Layout(layout_flat, settings=settings)

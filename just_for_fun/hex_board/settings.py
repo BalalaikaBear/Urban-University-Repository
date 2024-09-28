@@ -18,9 +18,13 @@ class Camera:
 
 class Settings:
     """Настройки игрока"""
-    def __init__(self, screen: Screen = Screen, camera: Camera = Camera) -> None:
+    def __init__(self,
+                 screen: Screen = Screen(),
+                 camera: Camera = Camera(),
+                 fps: int | float = 60) -> None:
         self.screen = screen
         self.camera = camera
+        self.fps = fps
 
 
 class Player:
@@ -32,11 +36,4 @@ class Player:
     def __str__(self) -> str:
         return f'{self.name} (ID: {self.id})'
 
-
-# проверка нажатия кнопок
-left_pressed = False
-right_pressed = False
-up_pressed = False
-down_pressed = False
-turn_counterclockwise = False
-turn_clockwise = False
+settings = Settings()

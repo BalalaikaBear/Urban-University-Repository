@@ -1,18 +1,32 @@
-import math
-from hexmath import *
-from coordinates import Orientation, Layout
-from settings import Player
+from mapgenerators import *
+from checkevents import *
 
-sqrt3 = math.sqrt(3)
+def main():
+    # координаты существующих шестиугольников
+    coordinates = {(0, 0): Cell((0, 0)),
+                   (1, 0): Cell((1, 0)),
+                   (0, 1): Cell((0, 1)),
+                   (1, 1): Cell((1, 1))}
 
-player = Player('Admin')
+    coordinates = generate_square_grid(60, 60)
 
-# стартовая ориентация ячеек
-layout_flat = Orientation(numpy.array([[3/2, 0, 0],
-                                      [sqrt3/2, sqrt3, 0],
-                                      [0, 0, 1]]),
-                          angle=0,
-                          size=30)
+    while running:
+        clock.tick()
 
-# применяемая система координат (перемещение, масштабирование, начальное положение)
-LAYOUT = Layout(layout_flat, player)
+        check_events()  # управление и ивенты
+
+        # ОТРИСОВКА И ОБНОВЛЕНИЕ ЭКРАНА
+
+        screen.fill((0, 0, 0))
+        #draw_grid(coordinates)
+        #update_screen()
+        pygame.display.update()
+
+        print("FPS:", clock.get_fps())
+        #LAYOUT.print()
+
+    pygame.quit()
+
+
+if __name__ == "__main__":
+    main()
