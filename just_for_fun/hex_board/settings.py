@@ -25,10 +25,9 @@ class Settings:
 
 class Player:
     """Информация пользователя"""
-    def __init__(self, name: str, settings: Settings = Settings) -> None:
+    def __init__(self, name: str) -> None:
         self.name = name
         self.id = hash(self.name)
-        self.settings = settings
 
     def __str__(self) -> str:
         return f'{self.name} (ID: {self.id})'
