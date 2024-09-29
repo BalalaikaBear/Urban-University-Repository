@@ -1,9 +1,10 @@
 from typing import Optional, Any
-from numbers import Real  # real numbers as a type
 from collections.abc import MutableMapping
+import sys, numpy
 
 # Сокращение записи типов объектов
-type Hex[q, r] = tuple[Real, Real]
+type Hex[q, r] = tuple[float | numpy.ndarray, float | numpy.ndarray]
+
 
 class Map(MutableMapping):
     """Содержит информацию о карте в виде словаря"""
@@ -13,7 +14,7 @@ class Map(MutableMapping):
         else:
             self.data = data
 
-    def cells_around(self, center: Hex, *, radius: int = 1) -> set[Hex]:
+    def hexes_around(self, center: Hex, *, radius: int = 1) -> set[Hex]:
         """
         Возвращает множество ячеек, вокруг указанной ячейки
 
@@ -27,7 +28,7 @@ class Map(MutableMapping):
                    if (q + center[0], r + center[1]) in self)
 
     def __getitem__(self, item: Any) -> Any:
-        return self[item]
+        return self.data.get(item)
 
     def __setitem__(self, key: Hex, value: Any) -> None:
         self.data[key] = value
@@ -42,7 +43,4 @@ class Map(MutableMapping):
         return len(self.data)
 
     def __str__(self) -> str:
-        return f'Size of a map is {self.__len__} items'
-
-
-
+        return f'Map(Cells: {self.__len__}, Size: {sys.getsizeof(self)} bytes)'
