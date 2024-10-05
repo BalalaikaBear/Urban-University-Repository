@@ -59,11 +59,11 @@ class Layout:
 
     def scale(self, scale: float) -> None:
         """Отмасштабировать систему координат на указанное значение"""
-        scaling_matrix = numpy.array([[scale * self.settings.camera.scale, 0, 0],
-                                     [0, scale * self.settings.camera.scale, 0],
+        scaling_matrix = numpy.array([[scale, 0, 0],
+                                     [0, scale, 0],
                                      [0, 0, 1]])
         self.orientation.matrix = scaling_matrix @ self.orientation.matrix
-        self.orientation.size *= scale * self.settings.camera.scale
+        self.orientation.size *= scale
         self.calculate_vectors()
 
     def calculate_vectors(self) -> None:

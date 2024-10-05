@@ -88,9 +88,10 @@ def check_events() -> None:
         # вращение колесика мыши
         if event.type == pygame.MOUSEWHEEL:
             # приближение/отдаление камеры
-            LAYOUT.scale(1 + event.y)
+            print(event.y)
+            LAYOUT.scale(1 + event.y * settings.camera.scale)
 
-    # УПРАВЛЕНИЕ КАМЕРОЙ
+    # УПРАВЛЕНИЕ КАМЕРОЙas
     # перемещение
     if settings.inputs.left_pressed and not settings.inputs.right_pressed:
         LAYOUT.translate((1, 0))
@@ -136,7 +137,7 @@ def draw_grid(coordinates: Map) -> None:
     # ОТРИСОВКА ЯЧЕЕК
     for coordinate, hexagon in grid_border(coordinates).items():
         position: Point = LAYOUT.get_pos(coordinate)  # положение на экране
-        #position: Point = hexmath.hex_to_pixel(LAYOUT, hexagon.coordinate, settings=settings)  # положение на экране
+        #wwaposition: Point = hexmath.hex_to_pixel(LAYOUT, hexagon.coordinate, settings=settings)  # положение на экране
         # отображение объектов только в пределах экрана
         if (settings.screen.border - sqrt3*LAYOUT.orientation.size < position[1] < settings.screen.height - settings.screen.border + sqrt3*LAYOUT.orientation.size
             and settings.screen.border - sqrt3*LAYOUT.orientation.size < position[0] < settings.screen.width - settings.screen.border + sqrt3*LAYOUT.orientation.size):
