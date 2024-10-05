@@ -68,13 +68,17 @@ class Layout:
 
     def calculate_vectors(self) -> None:
         """Определение векторов (1, 0) и (0, 1) для последующего быстрого вычисления"""
-        self._qvector = hexmath.hex_to_pixel(self, (1, 0), settings=self.settings)
-        self._rvector = hexmath.hex_to_pixel(self, (0, 1), settings=self.settings)
+        self._qvector = hexmath.sub(hexmath.hex_to_pixel(self, (1, 0), settings=self.settings),
+                                    hexmath.hex_to_pixel(self, (0, 0), settings=self.settings))
+        self._rvector = hexmath.sub(hexmath.hex_to_pixel(self, (0, 1), settings=self.settings),
+                                    hexmath.hex_to_pixel(self, (0, 0), settings=self.settings))
 
     def get_pos(self, hex_coord: Hex) -> Point:
         """Возвращает координаты точки в новой системе координат"""
-        return (self._qvector[0] * hex_coord[0] + self._rvector[0] * hex_coord[1],
-                self._qvector[1] * hex_coord[0] + self._rvector[1] * hex_coord[1])
+        return (self.orientation.matrix[0][2] + self.settings.screen.origin[0]
+                + self._qvector[0] * hex_coord[0] + self._rvector[0] * hex_coord[1],
+                self.orientation.matrix[1][2] + self.settings.screen.origin[1]
+                + self._qvector[1] * hex_coord[0] + self._rvector[1] * hex_coord[1])
 
     def set_layout(self, orientation: Orientation) -> None:
         """Задание новой системы координат"""
