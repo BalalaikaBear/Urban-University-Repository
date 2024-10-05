@@ -88,7 +88,7 @@ def check_events() -> None:
         # вращение колесика мыши
         if event.type == pygame.MOUSEWHEEL:
             # приближение/отдаление камеры
-            LAYOUT.scale(1 + event.y * settings.camera.scale)
+            LAYOUT.scale(1 + event.y)
 
     # УПРАВЛЕНИЕ КАМЕРОЙ
     # перемещение
