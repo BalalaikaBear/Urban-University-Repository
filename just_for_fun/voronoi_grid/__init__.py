@@ -3,7 +3,7 @@ import pygame, sys
 
 WIDTH = 1600
 HEIGHT = 1200
-size = 8
+size = 10
 
 # инициализация
 pygame.init()
@@ -17,6 +17,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
 def check_events() -> None:
+    """Фиксация нажатия клавиш"""
     global running
 
     for event in pygame.event.get():
@@ -25,6 +26,7 @@ def check_events() -> None:
             running = False
 
 def draw() -> None:
+    """Рисование объектов на экране"""
     for chunk in chunks:
         # центры ячеек
         for point in chunk.points:
@@ -49,6 +51,7 @@ if __name__ == '__main__':
     chunk2 = ChunkGrid((1, 1))
     chunks = (chunk, chunk2)
 
+    # вечно-обновляющийся цикл
     while running:
         clock.tick()
 
@@ -60,5 +63,6 @@ if __name__ == '__main__':
             chunk.update()
         pygame.display.update()
 
+    # закрытие программы
     pygame.quit()
     sys.exit()

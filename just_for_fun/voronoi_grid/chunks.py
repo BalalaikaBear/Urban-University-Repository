@@ -10,7 +10,7 @@ def lerp(pos_a: tuple[float, float], pos_b: tuple[float, float], t: float) -> tu
     return py_lerp(pos_a[0], pos_b[0], t), py_lerp(pos_a[1], pos_b[1], t)
 
 class ChunkGrid:
-    CHUNK_SIZE = 20
+    CHUNK_SIZE = 20  # количество ячеек на одной из грани шестиугольника
 
     def __init__(self, coordinate: tuple[int, int]) -> None:
         self.coordinate = coordinate
@@ -23,6 +23,11 @@ class ChunkGrid:
         self.generate()
 
     def generate(self) -> None:
+        """
+        Генерация сетки в первом приближении
+
+        :return: Грубая диаграмма Вороного
+        """
         # вершины шестиугольника
         for i in range(6):
             angle_deg = 60 * i
@@ -45,6 +50,11 @@ class ChunkGrid:
         self.vor = Voronoi(self.points)
 
     def _edge_points(self) -> None:
+        """
+        Интерполирование крайних ячеек шестиугольника
+
+        :return: Добавляет крайние ячейки в общий массив точек
+        """
         for i in range(6):
             for step in [x/self.CHUNK_SIZE for x in range(self.CHUNK_SIZE)]:
                 if i == 5:
@@ -53,7 +63,13 @@ class ChunkGrid:
                     self.points.append(lerp(self.corners[i], self.corners[i+1], step))
 
     def update(self) -> None:
-        # Relaxation algorithm
+        """
+        Алгоритм релаксации для диаграммы Вороного
+
+        :return: Новое положение ячеек шестиугольника
+        """
+        # Calculating the area and centroid of a polygon - https://paulbourke.net/geometry/polygonmesh/
+        # Lloyd's algorithm - https://en.wikipedia.org/wiki/Lloyd%27s_algorithm
         self.points = []
         for segment in self.vor.regions:
             if segment and not -1 in segment:
