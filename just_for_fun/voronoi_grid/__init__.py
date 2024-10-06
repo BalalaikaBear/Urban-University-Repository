@@ -7,7 +7,7 @@ from queue import Queue
 
 WIDTH = 1600
 HEIGHT = 1200
-size = 15
+size = 25
 
 # инициализация
 pygame.init()
@@ -45,11 +45,11 @@ def draw() -> None:
 
             # сегменты
             for segment in chunk.vor.regions:
-                if segment and not -1 in segment:
+                if segment and -1 not in segment:
                     pygame.draw.lines(screen, (140, 90, 200), True,
                                       [(chunk.vor.vertices[i][0] * size + WIDTH / 2,
                                         chunk.vor.vertices[i][1] * size + HEIGHT / 2)
-                                       for i in segment if i != -1])
+                                       for i in segment])
 
 if __name__ == '__main__':
     chunk = ChunkGrid(Hex(0, 0))
