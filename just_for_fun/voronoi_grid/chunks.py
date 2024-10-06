@@ -1,16 +1,18 @@
 import random, math
-from enum import Enum, auto
+from enum import IntEnum, auto
 from scipy.spatial import Voronoi
 
+from hexclass import Hex
 from pygame.math import lerp as py_lerp
 
 sqrt3 = math.sqrt(3)
 
 def lerp(pos_a: tuple[float, float], pos_b: tuple[float, float], t: float) -> tuple[float, float]:
-    """Линейная интерполяция между двумя точками в шестиугольной системе координат"""
+    """Линейная интерполяция между двумя точками"""
     return py_lerp(pos_a[0], pos_b[0], t), py_lerp(pos_a[1], pos_b[1], t)
 
-class ChunkState(Enum):
+class ChunkState(IntEnum):
+    INIT = auto()
     GEN_POINTS = auto()
     RELAXING = auto()
     FREEZE = auto()
@@ -18,16 +20,16 @@ class ChunkState(Enum):
     DONE = auto()
 
 class ChunkGrid:
-    CHUNK_SIZE = 20  # количество ячеек на одной из граней шестиугольника
+    CHUNK_SIZE = 12  # количество ячеек на одной из граней шестиугольника
 
-    def __init__(self, coordinate: tuple[int, int]) -> None:
+    def __init__(self, coordinate: Hex) -> None:
         # координаты чанка
         self.coordinate = coordinate
-        self._x_offset: float = coordinate[0] * self.CHUNK_SIZE*3/2
-        self._y_offset: float = coordinate[1] * self.CHUNK_SIZE*sqrt3 + coordinate[0] * self.CHUNK_SIZE*sqrt3/2
+        self._x_offset: float = coordinate.q * self.CHUNK_SIZE*3/2
+        self._y_offset: float = coordinate.r * self.CHUNK_SIZE*sqrt3 + coordinate.q * self.CHUNK_SIZE*sqrt3/2
 
         # состояние чанка
-        self.state = ChunkState.GEN_POINTS
+        self.state = ChunkState.INIT
         self.relax_iter = 0
 
         # центры ячеек
@@ -37,8 +39,6 @@ class ChunkGrid:
 
         # Voronoi объект
         self.vor = None
-
-        self.run()
 
     def run(self):
         self.generate()
@@ -65,7 +65,7 @@ class ChunkGrid:
                                  self.CHUNK_SIZE * math.sin(angle_rad)))
 
         # генерация точек внутри шестиугольника
-        while len(self.points) < self.CHUNK_SIZE*45:
+        while len(self.points) < self.CHUNK_SIZE**2 * 3:
             x = (random.random()-0.5) * self.CHUNK_SIZE*1.8
             y = (random.random()-0.5) * self.CHUNK_SIZE*1.6
             if (-x*sqrt3 - self.CHUNK_SIZE*1.6 < y < -x*sqrt3 + self.CHUNK_SIZE*1.6
@@ -138,4 +138,4 @@ class ChunkGrid:
         return f'ChunkGrid(coordinate={self.coordinate}, state={self.state})'
 
 if __name__ == '__main__':
-    chunk = ChunkGrid(coordinate=(1, 0))
+    chunk = ChunkGrid(coordinate=Hex(1, 0))

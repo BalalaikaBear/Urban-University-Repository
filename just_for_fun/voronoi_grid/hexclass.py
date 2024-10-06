@@ -1,19 +1,20 @@
 import pygame
+from collections import namedtuple
 from collections.abc import Sequence, Iterable
 from typing import Callable
 
 _round: Callable = round
 
-class Hex(Sequence):
+class Hex(namedtuple('Hex', ['q', 'r'])):
     # Кортеж из положений соседних ячеек по часовой стрелке
-    HEX_DIRECTIONS: tuple = ((1, 0), (1, -1), (0, -1),
-                             (-1, 0), (-1, 1), (0, 1))
+    __slots__ = ()
 
-    def __init__(self, q: float = 0, r: float = 0) -> None:
-        super().__init__()
-        self.q = q
-        self.r = r
-        self.tuple = (self.q, self.r)
+    HEX_DIRECTIONS: tuple = ((1, -1), (1, 0), (0, 1),
+                             (-1, 1), (-1, 0), (0, -1))
+
+    @property
+    def s(self):
+        return -self.q - self.r
 
     def distance(self, hexagon) -> int:
         """Расстояние между двумя ячейками"""
@@ -25,19 +26,19 @@ class Hex(Sequence):
     def direction(self, direct: int | str) -> tuple:
         """Возвращает ячейку в зависимости от введенного направления"""
         if direct in [1, 2, 3, 4, 5, 6]:
-            return self.HEX_DIRECTIONS[direct]
+            return self.HEX_DIRECTIONS[direct-1]
         elif direct == 'n' or direct == 'north':
-            return self.HEX_DIRECTIONS[6]
-        elif direct == 'ne' or direct == 'north-east':
-            return self.HEX_DIRECTIONS[1]
-        elif direct == 'se' or direct == 'south-east':
-            return self.HEX_DIRECTIONS[2]
-        elif direct == 's' or direct == 'south':
-            return self.HEX_DIRECTIONS[3]
-        elif direct == 'sw' or direct == 'south-west':
-            return self.HEX_DIRECTIONS[4]
-        elif direct == 'nw' or direct == 'north-west':
             return self.HEX_DIRECTIONS[5]
+        elif direct == 'ne' or direct == 'north-east':
+            return self.HEX_DIRECTIONS[0]
+        elif direct == 'se' or direct == 'south-east':
+            return self.HEX_DIRECTIONS[1]
+        elif direct == 's' or direct == 'south':
+            return self.HEX_DIRECTIONS[2]
+        elif direct == 'sw' or direct == 'south-west':
+            return self.HEX_DIRECTIONS[3]
+        elif direct == 'nw' or direct == 'north-west':
+            return self.HEX_DIRECTIONS[4]
 
     def neighbor(self, direct: int, *, dist: int = 1):
         """Возвращает следующую ячейку по направлению"""
@@ -49,6 +50,12 @@ class Hex(Sequence):
             for _ in range(dist):
                 new_hex = new_hex + self.direction(direct)
             return new_hex
+
+    def neighbors(self) -> tuple:
+        list_of_hexes = []
+        for direct in range(1, 7):
+            list_of_hexes.append(self.neighbor(direct))
+        return tuple(list_of_hexes)
 
     def round(self):
         """Возвращает ближайшую ячейку к точке"""
@@ -147,18 +154,6 @@ class Hex(Sequence):
         elif item == 1 or item == -1 or item == 'r':
             return self.r
 
-    def __iter__(self) -> iter:
-        return iter(self.tuple)
-
-    def __contains__(self, item) -> bool:
-        if item == self.q or item == self.r:
-            return True
-        else:
-            return False
-
-    def __reversed__(self):
-        return Hex(-self.q, -self.r)
-
     def __len__(self) -> int:
         """Расстояние до ячейки"""
         return int((abs(self.q) + abs(self.r)) / 2)
@@ -177,3 +172,4 @@ if __name__ == '__main__':
     print(hex_vector + pygame.Vector2(10, 1))
     print(pygame.Vector2(2, 2) * pygame.Vector2(3, 6))
     print(hex_vector.neighbor(3, dist=2))
+    print(hex_vector.neighbors())
