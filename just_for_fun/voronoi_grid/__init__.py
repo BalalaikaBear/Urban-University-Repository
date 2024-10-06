@@ -1,4 +1,4 @@
-from chunks import ChunkGrid
+from chunks import ChunkGrid, ChunkState
 import pygame, sys
 
 WIDTH = 1600
@@ -47,9 +47,8 @@ def draw() -> None:
                                    for i in segment if i != -1])
 
 if __name__ == '__main__':
-    chunk = ChunkGrid((0, 0))
-    chunk2 = ChunkGrid((1, 1))
-    chunks = (chunk, chunk2)
+    chunk = ChunkGrid((-1, 0))
+    chunks: list = [chunk]
 
     # вечно-обновляющийся цикл
     while running:
@@ -59,8 +58,11 @@ if __name__ == '__main__':
 
         screen.fill(BACKGROUND)
         draw()
-        for chunk in chunks:
+
+        if chunk.relax_iter < 60:
             chunk.update()
+        elif chunk.state is ChunkState.RELAXING and chunk.relax_iter >= 60:
+            chunk.freeze()
         pygame.display.update()
 
     # закрытие программы

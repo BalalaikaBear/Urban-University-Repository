@@ -1,0 +1,179 @@
+import pygame
+from collections.abc import Sequence, Iterable
+from typing import Callable
+
+_round: Callable = round
+
+class Hex(Sequence):
+    # Кортеж из положений соседних ячеек по часовой стрелке
+    HEX_DIRECTIONS: tuple = ((1, 0), (1, -1), (0, -1),
+                             (-1, 0), (-1, 1), (0, 1))
+
+    def __init__(self, q: float = 0, r: float = 0) -> None:
+        super().__init__()
+        self.q = q
+        self.r = r
+        self.tuple = (self.q, self.r)
+
+    def distance(self, hexagon) -> int:
+        """Расстояние между двумя ячейками"""
+        if isinstance(hexagon, Hex):
+            return len(self - hexagon)
+        else:
+            raise TypeError('invalid type')
+
+    def direction(self, direct: int | str) -> tuple:
+        """Возвращает ячейку в зависимости от введенного направления"""
+        if direct in [1, 2, 3, 4, 5, 6]:
+            return self.HEX_DIRECTIONS[direct]
+        elif direct == 'n' or direct == 'north':
+            return self.HEX_DIRECTIONS[6]
+        elif direct == 'ne' or direct == 'north-east':
+            return self.HEX_DIRECTIONS[1]
+        elif direct == 'se' or direct == 'south-east':
+            return self.HEX_DIRECTIONS[2]
+        elif direct == 's' or direct == 'south':
+            return self.HEX_DIRECTIONS[3]
+        elif direct == 'sw' or direct == 'south-west':
+            return self.HEX_DIRECTIONS[4]
+        elif direct == 'nw' or direct == 'north-west':
+            return self.HEX_DIRECTIONS[5]
+
+    def neighbor(self, direct: int, *, dist: int = 1):
+        """Возвращает следующую ячейку по направлению"""
+        if dist == 1:
+            new_hex = self + self.direction(direct)
+            return Hex(new_hex.q, new_hex.r)
+        else:
+            new_hex = Hex(self.q, self.r)
+            for _ in range(dist):
+                new_hex = new_hex + self.direction(direct)
+            return new_hex
+
+    def round(self):
+        """Возвращает ближайшую ячейку к точке"""
+        q = int(_round(self.q))
+        r = int(_round(self.r))
+        s = int(_round(-self.q - self.r))
+        q_diff = abs(q - self.q)
+        r_diff = abs(r - self.r)
+        s_diff = abs(s + self.q + self.r)
+        if q_diff > r_diff and q_diff > s_diff:
+            q = -r - s
+        elif r_diff > s_diff:
+            r = -q - s
+        # else:
+        #    s = -q - r
+        return Hex(q, r)
+
+    def __add__(self, other):
+        """Сложение координат ячеек"""
+        # число
+        if isinstance(other, (int, float)):
+            return Hex(self.q + other, self.r + other)
+        # str
+        elif isinstance(other, str):
+            # str(число)
+            if other.isdecimal():
+                return Hex(self.q + float(other), self.r + float(other))
+            else:
+                raise TypeError("unsupported operand type(s) for 'str'")
+        # массив
+        elif isinstance(other, Iterable):
+            return Hex(self.q + other[0], self.r + other[1])
+        else:
+            raise TypeError(f"invalid type")
+
+    def __sub__(self, other):
+        """Вычитание координат ячеек"""
+        # число
+        if isinstance(other, (int, float)):
+            return Hex(self.q - other, self.r - other)
+        # str
+        elif isinstance(other, str):
+            # str(число)
+            if other.isdecimal():
+                return Hex(self.q - float(other), self.r - float(other))
+            else:
+                raise TypeError("unsupported operand type(s) for 'str'")
+        # массив
+        elif isinstance(other, Iterable):
+            return Hex(self.q - other[0], self.r - other[1])
+        else:
+            raise TypeError(f"invalid type")
+
+    def __mul__(self, other):
+        """Умножение координат ячеек"""
+        # число
+        if isinstance(other, (int, float)):
+            return Hex(self.q * other, self.r * other)
+        # str
+        elif isinstance(other, str):
+            # str(число)
+            if other.isdecimal():
+                return Hex(self.q * float(other), self.r * float(other))
+            else:
+                raise TypeError("unsupported operand type(s) for 'str'")
+        # массив
+        elif isinstance(other, Iterable):
+            return Hex(self.q * other[0], self.r * other[1])
+        else:
+            raise TypeError(f"invalid type")
+
+    def __truediv__(self, other):
+        # число
+        if isinstance(other, (int, float)):
+            return Hex(self.q / other, self.r / other)
+        else:
+            raise TypeError(f"invalid type")
+
+    def __floordiv__(self, other):
+        # число
+        if isinstance(other, (int, float)):
+            return Hex(self.q // other, self.r // other)
+        else:
+            raise TypeError(f"invalid type")
+
+    def __mod__(self, other):
+        # число
+        if isinstance(other, (int, float)):
+            return Hex(self.q % other, self.r % other)
+        else:
+            raise TypeError(f"invalid type")
+
+    def __getitem__(self, item):
+        if item == 0 or item == 'q':
+            return self.q
+        elif item == 1 or item == -1 or item == 'r':
+            return self.r
+
+    def __iter__(self) -> iter:
+        return iter(self.tuple)
+
+    def __contains__(self, item) -> bool:
+        if item == self.q or item == self.r:
+            return True
+        else:
+            return False
+
+    def __reversed__(self):
+        return Hex(-self.q, -self.r)
+
+    def __len__(self) -> int:
+        """Расстояние до ячейки"""
+        return int((abs(self.q) + abs(self.r)) / 2)
+
+    def __str__(self) -> str:
+        return f'({self.q}, {self.r})'
+
+    def __repr__(self) -> str:
+        return f'Hex({self.q}, {self.r})'
+
+
+if __name__ == '__main__':
+    hex_vector = Hex(4, 3)
+    d = {hex_vector: 'info'}
+    print(d)
+    print(hex_vector + pygame.Vector2(10, 1))
+    print(pygame.Vector2(2, 2) * pygame.Vector2(3, 6))
+    print(hex_vector.neighbor(3, dist=2))
