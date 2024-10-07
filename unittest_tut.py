@@ -1,8 +1,14 @@
 import unittest
 import random
+import logging
 
 def add(a, b):
-    return a + b
+    try:
+        a + b  # в случае невыполнения данной операции лог записан не будет
+        logging.info(f'Successful summ {a} + {b}')
+        return a + b
+    except TypeError as err:
+        logging.error(f'Type error: {err}', exc_info=True)  # передать в лог информацию об ошибке
 
 def sub(a, b):
     return a - b
@@ -58,3 +64,14 @@ class CalcTest(unittest.TestCase):
 if __name__ == '__main__':
     unittest.main()  # запуск тестов
 
+    # логи
+    logging.debug('сообщение')     # 1. сообщения уровня debug
+    logging.info('сообщение')      # 2. информационные логи
+    logging.warning('сообщение')   # 3. сообщения о предупреждениях
+    logging.error('сообщение')     # 4. сообщения об ошибках
+    logging.critical('сообщение')  # 5. сообщения о критических ошибках
+
+    logging.basicConfig(level=logging.INFO,   # <level> - с какого уровня воспринимается сообщение
+                        filemode='w',         # <filemode> - запись файла
+                        filename='logs.log',  # <filename> - имя файла
+                        format='%(asctime)s | %(levelname)s | %(message)s')  # <format> - оформление сообщения в логе
