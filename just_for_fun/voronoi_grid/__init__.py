@@ -95,7 +95,7 @@ if __name__ == '__main__':
         elif chunk.state is ChunkState.RELAXING and chunk.relax_iter >= 100:
             chunk.freeze()
 
-        #print("FPS:", clock.get_fps())
+        print("FPS:", clock.get_fps())
         pygame.display.update()
 
     # закрытие программы

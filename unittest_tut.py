@@ -1,4 +1,5 @@
 import unittest
+import random
 
 def add(a, b):
     return a + b
@@ -25,9 +26,11 @@ class CalcTest(unittest.TestCase):
         self.assertEqual(add(10, 15), 25)
         self.assertEqual(add(1, 1), 2)
 
+    @unittest.skip("Причина пропуска теста")  # при запуске теста данная функция не будет проверяться
     def test_sub(self) -> None:  # тест №2
         self.assertEqual(sub(4, -4), 8)
 
+    @unittest.skipIf(random.randint(0, 1), "Причина пропуска теста")  # пропуск теста при True
     def all_tests(self) -> None:
         pass
         self.assertEqual(a, b)  # a = b

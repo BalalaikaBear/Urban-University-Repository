@@ -133,6 +133,7 @@ class ChunkGrid:
             self.edge_points[i] = [coordinate[0] + self._x_offset, coordinate[1] + self._y_offset]
 
         self.vor = Voronoi(self.points)
+        print('Freeze')
 
     def __repr__(self):
         return f'ChunkGrid(coordinate={self.coordinate}, state={self.state})'
