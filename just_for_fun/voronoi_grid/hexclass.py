@@ -1,19 +1,19 @@
 import pygame
 from collections import namedtuple
-from collections.abc import Sequence, Iterable
+from collections.abc import Iterable
 from typing import Callable
 
 _round: Callable = round
 
 class Hex(namedtuple('Hex', ['q', 'r'])):
-    # Кортеж из положений соседних ячеек по часовой стрелке
     __slots__ = ()
 
+    # Кортеж из положений соседних ячеек по часовой стрелке
     HEX_DIRECTIONS: tuple = ((1, -1), (1, 0), (0, 1),
                              (-1, 1), (-1, 0), (0, -1))
 
     @property
-    def s(self):
+    def s(self) -> 'Hex':
         return -self.q - self.r
 
     def distance(self, hexagon) -> int:
@@ -23,7 +23,7 @@ class Hex(namedtuple('Hex', ['q', 'r'])):
         else:
             raise TypeError('invalid type')
 
-    def direction(self, direct: int | str) -> tuple:
+    def direction(self, direct: int | str) -> tuple['Hex']:
         """Возвращает ячейку в зависимости от введенного направления"""
         if direct in [1, 2, 3, 4, 5, 6]:
             return self.HEX_DIRECTIONS[direct-1]
@@ -40,7 +40,7 @@ class Hex(namedtuple('Hex', ['q', 'r'])):
         elif direct == 'nw' or direct == 'north-west':
             return self.HEX_DIRECTIONS[4]
 
-    def neighbor(self, direct: int, *, dist: int = 1):
+    def neighbor(self, direct: int, *, dist: int = 1) -> 'Hex':
         """Возвращает следующую ячейку по направлению"""
         if dist == 1:
             new_hex = self + self.direction(direct)
@@ -51,13 +51,13 @@ class Hex(namedtuple('Hex', ['q', 'r'])):
                 new_hex = new_hex + self.direction(direct)
             return new_hex
 
-    def neighbors(self) -> tuple:
+    def neighbors(self) -> tuple['Hex']:
         list_of_hexes = []
         for direct in range(1, 7):
             list_of_hexes.append(self.neighbor(direct))
         return tuple(list_of_hexes)
 
-    def round(self):
+    def round(self) -> 'Hex':
         """Возвращает ближайшую ячейку к точке"""
         q = int(_round(self.q))
         r = int(_round(self.r))
@@ -73,7 +73,7 @@ class Hex(namedtuple('Hex', ['q', 'r'])):
         #    s = -q - r
         return Hex(q, r)
 
-    def __add__(self, other):
+    def __add__(self, other: float | Iterable) -> 'Hex':
         """Сложение координат ячеек"""
         # число
         if isinstance(other, (int, float)):
@@ -91,7 +91,7 @@ class Hex(namedtuple('Hex', ['q', 'r'])):
         else:
             raise TypeError(f"invalid type")
 
-    def __sub__(self, other):
+    def __sub__(self, other: float | Iterable) -> 'Hex':
         """Вычитание координат ячеек"""
         # число
         if isinstance(other, (int, float)):
@@ -109,7 +109,7 @@ class Hex(namedtuple('Hex', ['q', 'r'])):
         else:
             raise TypeError(f"invalid type")
 
-    def __mul__(self, other):
+    def __mul__(self, other: float | Iterable) -> 'Hex':
         """Умножение координат ячеек"""
         # число
         if isinstance(other, (int, float)):
@@ -127,28 +127,28 @@ class Hex(namedtuple('Hex', ['q', 'r'])):
         else:
             raise TypeError(f"invalid type")
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: float) -> 'Hex':
         # число
         if isinstance(other, (int, float)):
             return Hex(self.q / other, self.r / other)
         else:
             raise TypeError(f"invalid type")
 
-    def __floordiv__(self, other):
+    def __floordiv__(self, other: float) -> 'Hex':
         # число
         if isinstance(other, (int, float)):
             return Hex(self.q // other, self.r // other)
         else:
             raise TypeError(f"invalid type")
 
-    def __mod__(self, other):
+    def __mod__(self, other: float) -> 'Hex':
         # число
         if isinstance(other, (int, float)):
             return Hex(self.q % other, self.r % other)
         else:
             raise TypeError(f"invalid type")
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int | str) -> float:
         if item == 0 or item == 'q':
             return self.q
         elif item == 1 or item == -1 or item == 'r':
@@ -173,3 +173,6 @@ if __name__ == '__main__':
     print(pygame.Vector2(2, 2) * pygame.Vector2(3, 6))
     print(hex_vector.neighbor(3, dist=2))
     print(hex_vector.neighbors())
+    print(Hex(10, 2).s)
+    print(len(hex_vector))
+    print(dir(hex_vector))
