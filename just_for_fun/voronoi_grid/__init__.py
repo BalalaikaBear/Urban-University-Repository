@@ -1,7 +1,6 @@
-import queue
-
 from chunks import ChunkGrid, ChunkState
 from hexclass import Hex
+from mapclass import Map
 import pygame, sys
 from queue import Queue
 
@@ -31,7 +30,7 @@ def check_events() -> None:
 
 def draw() -> None:
     """Рисование объектов на экране"""
-    for coordinate, chunk in chunk_map.items():
+    for coordinate, chunk in map_data.chunks.items():
         if chunk.state > ChunkState.INIT:
             # центры ячеек
             for point in chunk.points:
@@ -52,17 +51,7 @@ def draw() -> None:
                                        for i in segment])
 
 if __name__ == '__main__':
-    chunk = ChunkGrid(Hex(0, 0))
-    chunks: list = [chunk]
-
-    # данные о карте
-    hex1: Hex = Hex(0, 0)
-    chunk_map: dict = {hex1: chunk}
-
-    # очередь
-    gen_queue: queue.Queue = Queue()
-    gen_queue.put(chunk)
-    pull_out = True
+    map_data: Map = Map()
 
     # вечно-обновляющийся цикл
     while running:
@@ -72,28 +61,7 @@ if __name__ == '__main__':
 
         screen.fill(BACKGROUND)
         draw()
-
-        # вытащить чанк из очереди
-        if pull_out and not gen_queue.empty():
-            chunk: ChunkGrid = gen_queue.get()
-            chunk.run()
-            pull_out = False
-
-        # создание новых чанков вокруг только что созданного чанка и добавление следующего генерируемого чанка в очередь
-        if chunk.state is ChunkState.FREEZE:
-            pull_out = True
-            # определение соседних координат
-            for near_coord in chunk.coordinate.neighbors():
-                if near_coord not in chunk_map:
-                    new_chunk: ChunkGrid = ChunkGrid(near_coord)  # 1. создание нового чанка
-                    chunk_map[near_coord] = new_chunk             # 2. добавление его в словарь
-                    gen_queue.put(new_chunk)                      # 3. добавление его в очередь на генерацию
-
-        # процесс релаксации сетки каждый кадр
-        if chunk.relax_iter < 100:
-            chunk.update()
-        elif chunk.state is ChunkState.RELAXING and chunk.relax_iter >= 100:
-            chunk.freeze()
+        map_data.update()
 
         print("FPS:", clock.get_fps())
         pygame.display.update()

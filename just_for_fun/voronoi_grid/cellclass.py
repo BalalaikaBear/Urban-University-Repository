@@ -1,48 +1,79 @@
 from collections import namedtuple
 from collections.abc import Iterable
 from enum import Flag, auto
-from typing import Callable
+from typing import Callable, Optional
 
-class Bioms:
-    def __init__(self, *bioms: tuple['Biom']):
-        pass
+class Biomes(Flag):
+    NONE = auto()
 
-class Biom(Flag):
+    # roads
+    ROAD = auto()
+    RAILROAD = auto()
+
+    # land
     GRASSLAND = auto()
     DESERT = auto()
     SAVANNA = auto()
+    HILL = auto()
+
+    # forests
     FOREST = auto()
     TUNDRA = auto()
     TAIGA = auto()
+
+    # mountains
     MOUNTAIN = auto()
-    HILL = auto()
+    VULCANO = auto()
+
+    # water
     RIVER = auto()
     LAKE = auto()
     COAST = auto()
     OCEAN = auto()
 
-    def set(self, value):
-        self.value = value.value
+class Cell:
+    __slots__ = ['node', 'edges', 'corners', 'state']
 
-    def add(self, value):
-        self.value += value.value
+    def __init__(self,
+                 node: tuple[float, float],
+                 edges: Optional[list['Cell']] = None,
+                 corners: Optional[list[tuple[float, float]]] = None,
+                 state: Biomes = Biomes.NONE) -> None:
+        """
+        :param node: координата ячейки
+        :param edges: соседние ячейки
+        :param corners: контур ячейки
+        :param state: состояние ячейки
+        """
+        self.node = node
 
-class Cell(namedtuple(typename='Cell',
-                      field_names=['node', 'edges', 'corners', 'state'])):
-    node: tuple[float, float]
-    edges: list['Cell']
-    corners: tuple[tuple[float, float]]
-    state: Biom
-    __slots__ = ()
+        if edges is None: self.edges = []
+        else: self.edges = edges
 
-print(Biom.HILL | Biom.COAST)
-cell = Cell((1, 2), [], ((1, 1), (2, 2)), Biom.HILL)
-print(id(cell), cell)
-cell.edges.append(3)
-print(id(cell), cell)
-print(dir(Biom))
-cell.state.set(Biom.OCEAN)
-cell.state.add(Biom.LAKE)
-print(dir(Biom))
-print(id(cell), cell.state)
-print(cell.state.value)
+        if corners is None: self.corners = []
+        else: self.corners = corners
+
+        self.state = state
+
+    def set_state(self, state: Biomes) -> None:
+        """Задает состояние ячейки"""
+        if isinstance(state, Biomes):
+            self.state = state
+        else:
+            raise TypeError(f'object {state} is not Biomes(Flag)')
+
+    def add_state(self, state: Biomes) -> None:
+        """Добавляет состояние ячейки"""
+        if isinstance(state, Biomes):
+            self.state = self.state | state
+        else:
+            raise TypeError(f'object {state} is not Biomes(Flag)')
+
+if __name__ == '__main__':
+    print(Biomes.HILL | Biomes.COAST)
+    cell = Cell((1, 2), [], [(1, 1), (2, 2)], Biomes.HILL)
+    cell.set_state(Biomes.LAKE)
+    print(cell.state)
+    cell.add_state(Biomes.RIVER)
+    cell.add_state(Biomes.ROAD)
+    print(cell.state)

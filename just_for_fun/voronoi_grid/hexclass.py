@@ -1,19 +1,35 @@
 import pygame
-from collections import namedtuple
 from collections.abc import Iterable
 from typing import Callable
 
 _round: Callable = round
 
-class Hex(namedtuple('Hex', ['q', 'r'])):
-    __slots__ = ()
+class Hex:
+    __slots__ = ['q', 'r']
 
     # Кортеж из положений соседних ячеек по часовой стрелке
     HEX_DIRECTIONS: tuple = ((1, -1), (1, 0), (0, 1),
                              (-1, 1), (-1, 0), (0, -1))
 
+    __objects = {}  # словарь с уже созданными объектами данного класса
+
+    def __new__(cls, q, r) -> 'Hex':
+        """Ограничение на создание одинаковых объектов"""
+        key = (q, r)  # создание объекта с координатами
+        if key in cls.__objects:  # если объект уже был создан - возвращает его
+            return cls.__objects[key]  # метод __new__ ДОЛЖЕН возвращать ссылку на класс
+        else:
+            obj = super().__new__(cls)  # избегание повторной инициализации
+            cls.__objects[key] = obj  # добавление нового объекта в словарь созданных объектов
+            return obj  # метод __new__ ДОЛЖЕН возвращать ссылку на класс
+
+    def __init__(self, q, r) -> None:
+        self.q = q
+        self.r = r
+
     @property
     def s(self) -> 'Hex':
+        """Возвращает координату s"""
         return -self.q - self.r
 
     def distance(self, hexagon) -> int:
@@ -23,7 +39,7 @@ class Hex(namedtuple('Hex', ['q', 'r'])):
         else:
             raise TypeError('invalid type')
 
-    def direction(self, direct: int | str) -> tuple['Hex']:
+    def direction(self, direct: int | str) -> tuple[float, float]:
         """Возвращает ячейку в зависимости от введенного направления"""
         if direct in [1, 2, 3, 4, 5, 6]:
             return self.HEX_DIRECTIONS[direct-1]
@@ -51,7 +67,7 @@ class Hex(namedtuple('Hex', ['q', 'r'])):
                 new_hex = new_hex + self.direction(direct)
             return new_hex
 
-    def neighbors(self) -> tuple['Hex']:
+    def neighbors(self) -> tuple['Hex', ...]:
         list_of_hexes = []
         for direct in range(1, 7):
             list_of_hexes.append(self.neighbor(direct))
@@ -78,15 +94,8 @@ class Hex(namedtuple('Hex', ['q', 'r'])):
         # число
         if isinstance(other, (int, float)):
             return Hex(self.q + other, self.r + other)
-        # str
-        elif isinstance(other, str):
-            # str(число)
-            if other.isdecimal():
-                return Hex(self.q + float(other), self.r + float(other))
-            else:
-                raise TypeError("unsupported operand type(s) for 'str'")
         # массив
-        elif isinstance(other, Iterable):
+        elif isinstance(other, Iterable) and not isinstance(other, str):
             return Hex(self.q + other[0], self.r + other[1])
         else:
             raise TypeError(f"invalid type")
@@ -96,15 +105,8 @@ class Hex(namedtuple('Hex', ['q', 'r'])):
         # число
         if isinstance(other, (int, float)):
             return Hex(self.q - other, self.r - other)
-        # str
-        elif isinstance(other, str):
-            # str(число)
-            if other.isdecimal():
-                return Hex(self.q - float(other), self.r - float(other))
-            else:
-                raise TypeError("unsupported operand type(s) for 'str'")
         # массив
-        elif isinstance(other, Iterable):
+        elif isinstance(other, Iterable) and not isinstance(other, str):
             return Hex(self.q - other[0], self.r - other[1])
         else:
             raise TypeError(f"invalid type")
@@ -114,15 +116,8 @@ class Hex(namedtuple('Hex', ['q', 'r'])):
         # число
         if isinstance(other, (int, float)):
             return Hex(self.q * other, self.r * other)
-        # str
-        elif isinstance(other, str):
-            # str(число)
-            if other.isdecimal():
-                return Hex(self.q * float(other), self.r * float(other))
-            else:
-                raise TypeError("unsupported operand type(s) for 'str'")
         # массив
-        elif isinstance(other, Iterable):
+        elif isinstance(other, Iterable) and not isinstance(other, str):
             return Hex(self.q * other[0], self.r * other[1])
         else:
             raise TypeError(f"invalid type")
