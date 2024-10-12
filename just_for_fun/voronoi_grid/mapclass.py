@@ -21,6 +21,7 @@ class Map:
             self.source.put(self.last_chunk)
 
     def update(self) -> None:
+        """Обновление очереди на генерацию чанков и их обновление"""
         # запуск генерации требуемого чанка
         if not self.working:
             # основной чанк
