@@ -1,4 +1,4 @@
-from chunks import ChunkGrid, ChunkState
+from chunks import Chunk, ChunkState
 from hexclass import Hex
 from mapclass import Map
 import pygame, sys
@@ -6,7 +6,7 @@ from queue import Queue
 
 WIDTH = 1600
 HEIGHT = 1200
-size = 25
+size = 15
 
 # инициализация
 pygame.init()
@@ -30,7 +30,17 @@ def check_events() -> None:
 
 def draw() -> None:
     """Рисование объектов на экране"""
-    for coordinate, chunk in map_data.chunks.items():
+    for coordinate, chunk in map_data.chunks.FREEZE.items():
+        if chunk.state > ChunkState.INIT:
+            # сегменты
+            for segment in chunk.vor.regions:
+                if segment and -1 not in segment:
+                    pygame.draw.lines(screen, (180, 180, 200), True,
+                                      [(chunk.vor.vertices[i][0] * size + WIDTH / 2,
+                                        chunk.vor.vertices[i][1] * size + HEIGHT / 2)
+                                       for i in segment])
+
+    for coordinate, chunk in map_data.chunks.RELAXING.items():
         if chunk.state > ChunkState.INIT:
             # центры ячеек
             for point in chunk.points:
@@ -50,12 +60,15 @@ def draw() -> None:
                                         chunk.vor.vertices[i][1] * size + HEIGHT / 2)
                                        for i in segment])
 
+
 if __name__ == '__main__':
     map_data: Map = Map()
+    frame = 0
 
     # вечно-обновляющийся цикл
     while running:
         clock.tick()
+        frame += 1
 
         check_events()
 
@@ -63,7 +76,11 @@ if __name__ == '__main__':
         draw()
         map_data.update()
 
-        print("FPS:", clock.get_fps())
+        if frame == 600:
+            print('NEW CHUNK')
+            map_data.add(Hex(1, 0))
+
+        #print("FPS:", clock.get_fps())
         pygame.display.update()
 
     # закрытие программы

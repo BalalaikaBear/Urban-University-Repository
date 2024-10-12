@@ -162,12 +162,12 @@ class Hex:
 
 if __name__ == '__main__':
     hex_vector = Hex(4, 3)
-    d = {hex_vector: 'info'}
-    print(d)
-    print(hex_vector + pygame.Vector2(10, 1))
-    print(pygame.Vector2(2, 2) * pygame.Vector2(3, 6))
-    print(hex_vector.neighbor(3, dist=2))
+    #d = {hex_vector: 'info'}
+    #print(d)
+    #print(hex_vector + pygame.Vector2(10, 1))
+    #print(pygame.Vector2(2, 2) * pygame.Vector2(3, 6))
+    #print(hex_vector.neighbor(3, dist=2))
     print(hex_vector.neighbors())
-    print(Hex(10, 2).s)
-    print(len(hex_vector))
-    print(dir(hex_vector))
+    #print(Hex(10, 2).s)
+    #print(len(hex_vector))
+    #print(dir(hex_vector))
