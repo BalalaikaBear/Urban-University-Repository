@@ -1,4 +1,5 @@
-from chunks import Chunk, ChunkState, ChunksData
+from chunks import Chunk, ChunkState
+from chunkdata import ChunksData
 from hexclass import Hex
 from cellclass import Cell, Biomes
 
@@ -32,7 +33,7 @@ class Map:
 
                 # если данный чанк еще не был сгенерирован -> сгенерировать
                 if self.last_chunk.coordinate not in self.chunks.FREEZE:
-                    self.chunks.move(self.last_chunk) # перенос информации из словаря INIT в словарь RELAXING
+                    self.chunks.move(self.last_chunk)  # перенос информации из словаря INIT в словарь RELAXING
                     self.last_chunk.run()  # запуск генерации чанка
 
                 # добавление соседних чанков в очередь на генерацию
@@ -60,7 +61,7 @@ class Map:
         if self.last_chunk.state is ChunkState.FREEZE:
             # перенос информации из словаря RELAXING в словарь FREEZE
             if self.last_chunk.coordinate not in self.chunks.FREEZE:
-                print(f'moving from RELAXING to FREEZE')
+                print(f'moving from RELAXING to FREEZE chunk {self.last_chunk.coordinate}')
                 self.chunks.move(self.last_chunk, _from=ChunkState.RELAXING)
             self.working = False
 
