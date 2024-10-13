@@ -3,7 +3,13 @@ from chunkdata import ChunksData
 from hexclass import Hex
 from cellclass import Cell, Biomes
 
-from queue import Queue
+from queue import PriorityQueue
+from enum import StrEnum, auto
+
+class ChunkType(StrEnum):
+    """Информация об обязательной генерации чанка"""
+    REQUIRED = auto()  # обязательная полностью сгенерированная ячейка
+    OUTSKIRTS = auto()  # генерировать до состояния FREEZE
 
 class Map:
     def __init__(self) -> None:
@@ -11,45 +17,47 @@ class Map:
         self.last_chunk: Chunk = self.chunks.INIT[Hex(0, 0)]
 
         # очереди
-        self.source: Queue = Queue()
-        self.frontier: Queue = Queue()
+        self.frontier: PriorityQueue = PriorityQueue()
 
         # состояние
         self.working: bool = False
 
         # если центральный чанк еще не сгенерирован -> отправить его в очередь
         if self.last_chunk.state is ChunkState.INIT:
-            self.source.put(self.last_chunk)
+            self.frontier.put((ChunkState.INIT, ChunkType.REQUIRED, self.last_chunk))
 
     def update(self) -> None:
         """Обновление очереди на генерацию чанков и их обновление"""
         # запуск генерации требуемого чанка
-        if not self.working:
-            # основной чанк
-            if not self.source.empty():
-                self.working = True
-                self.last_chunk: Chunk = self.source.get()
-                print(f'getting chunk from source: {self.last_chunk.coordinate}')
+        if not self.working and not self.frontier.empty():
+            state, how_gen, self.last_chunk = self.frontier.get()
+            self.working = True
+            print(f'Generating CHUNK {self.last_chunk.coordinate} in state {state.name} with priority {how_gen.name}')
 
-                # если данный чанк еще не был сгенерирован -> сгенерировать
-                if self.last_chunk.coordinate not in self.chunks.FREEZE:
-                    self.chunks.move(self.last_chunk)  # перенос информации из словаря INIT в словарь RELAXING
-                    self.last_chunk.run()  # запуск генерации чанка
+            # если данный чанк еще не был сгенерирован -> сгенерировать
+            if self.last_chunk.coordinate in self.chunks.INIT:
+                self.chunks.move(self.last_chunk)  # перенос информации из словаря INIT в словарь RELAXING
+                self.last_chunk.run()  # запуск генерации чанка
+                self.frontier.put((ChunkState.RELAXING, how_gen, self.last_chunk))
 
+                # добавление в очередь для финальной генерации
+                if how_gen == ChunkType.REQUIRED:
+                    self.frontier.put((ChunkState.FREEZE, ChunkType.REQUIRED, self.last_chunk))
+
+            # если чанк еще на этапе релаксации -> вернуть в очередь
+            if state is ChunkState.RELAXING:
+                self.frontier.put((self.last_chunk.state, how_gen, self.last_chunk))
+
+            if how_gen == ChunkType.REQUIRED:
                 # добавление соседних чанков в очередь на генерацию
                 for near_chunk_coord in self.last_chunk.coordinate.neighbors():
                     if near_chunk_coord not in self.chunks:
-                        new_chunk: Chunk = Chunk(near_chunk_coord)      # 1. создание нового чанка
-                        self.chunks.INIT[near_chunk_coord] = new_chunk  # 2. добавление его в словарь
-                        self.frontier.put(new_chunk)                    # 3. добавление его в очередь на генерацию
-
-            # соседний чанк
-            elif not self.frontier.empty():
-                self.working = True
-                self.last_chunk: Chunk = self.frontier.get()
-                print(f'getting chunk from frontier: {self.last_chunk.coordinate}')
-                self.chunks.move(self.last_chunk) # перенос информации из словаря INIT в словарь RELAXING
-                self.last_chunk.run()  # запуск генерации чанка
+                        # 1. создание нового чанка
+                        new_chunk: Chunk = Chunk(near_chunk_coord)
+                        # 2. добавление его в словарь
+                        self.chunks.INIT[near_chunk_coord] = new_chunk
+                        # 3. добавление его в очередь на генерацию
+                        self.frontier.put((ChunkState.INIT, ChunkType.OUTSKIRTS, new_chunk))
 
         # процесс релаксации сетки каждый кадр
         if self.last_chunk.relax_iter < 100:
@@ -61,19 +69,17 @@ class Map:
         if self.last_chunk.state is ChunkState.FREEZE:
             # перенос информации из словаря RELAXING в словарь FREEZE
             if self.last_chunk.coordinate not in self.chunks.FREEZE:
-                print(f'moving from RELAXING to FREEZE chunk {self.last_chunk.coordinate}')
                 self.chunks.move(self.last_chunk, _from=ChunkState.RELAXING)
             self.working = False
 
     def add(self, pos: Hex) -> None:
         """Добавление чанка в очередь генерации"""
         if pos in self.chunks.FREEZE:
-            self.source.put(self.chunks.FREEZE[pos])
+            self.frontier.put((ChunkState.FREEZE, ChunkType.REQUIRED, self.chunks.FREEZE[pos]))
         elif pos not in self.chunks:
             new_chunk = Chunk(pos)
             self.chunks.INIT[pos] = new_chunk
-            self.source.put(new_chunk)
-
+            self.frontier.put((ChunkState.INIT, ChunkType.REQUIRED, new_chunk))
 
 
 if __name__ == '__main__':

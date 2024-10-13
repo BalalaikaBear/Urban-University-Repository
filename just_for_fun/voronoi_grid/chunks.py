@@ -1,4 +1,5 @@
 import random, math
+from typing import Self
 from enum import IntEnum, auto
 from scipy.spatial import Voronoi
 
@@ -133,8 +134,51 @@ class Chunk:
 
         self.vor = Voronoi(self.points)
 
+    def __lt__(self, other: Self | Hex) -> bool:
+        """Меньше чем"""
+        if isinstance(other, Chunk):
+            return len(self.coordinate) < len(other.coordinate)
+        elif isinstance(other, Hex):
+            return len(self.coordinate) < len(other)
+
+    def __gt__(self, other: Self | Hex) -> bool:
+        """Больше чем"""
+        if isinstance(other, Chunk):
+            return len(self.coordinate) > len(other.coordinate)
+        elif isinstance(other, Hex):
+            return len(self.coordinate) > len(other)
+
+    def __le__(self, other: Self | Hex) -> bool:
+        """Меньше или равно чем"""
+        if isinstance(other, Chunk):
+            return len(self.coordinate) <= len(other.coordinate)
+        elif isinstance(other, Hex):
+            return len(self.coordinate) <= len(other)
+
+    def __ge__(self, other: Self | Hex) -> bool:
+        """Больше или равно чем"""
+        if isinstance(other, Chunk):
+            return len(self.coordinate) >= len(other.coordinate)
+        elif isinstance(other, Hex):
+            return len(self.coordinate) >= len(other)
+
+    def __eq__(self, other: Self | Hex) -> bool:
+        """Равно"""
+        if isinstance(other, Chunk):
+            return len(self.coordinate) == len(other.coordinate)
+        elif isinstance(other, Hex):
+            return len(self.coordinate) == len(other)
+
+    def __ne__(self, other: Self | Hex) -> bool:
+        """Не равно"""
+        if isinstance(other, Chunk):
+            return len(self.coordinate) != len(other.coordinate)
+        elif isinstance(other, Hex):
+            return len(self.coordinate) != len(other)
+
     def __repr__(self):
         return f'ChunkGrid(coordinate={self.coordinate}, state={self.state})'
 
 if __name__ == '__main__':
     chunk = Chunk(coordinate=Hex(1, 0))
+    print(Chunk(Hex(2, 3)) < Chunk(Hex(-1, 4)))
