@@ -18,35 +18,38 @@ class Map:
 
         # очереди
         self.frontier: PriorityQueue = PriorityQueue()
+        self.queue_id: int = 0
 
         # состояние
         self.working: bool = False
 
         # если центральный чанк еще не сгенерирован -> отправить его в очередь
         if self.last_chunk.state is ChunkState.INIT:
-            self.frontier.put((ChunkState.INIT, ChunkType.REQUIRED, self.last_chunk))
+            self.frontier.put((ChunkState.INIT, self.queue_id, ChunkType.REQUIRED, self.last_chunk))
 
     def update(self) -> None:
         """Обновление очереди на генерацию чанков и их обновление"""
         # запуск генерации требуемого чанка
         if not self.working and not self.frontier.empty():
-            state, how_gen, self.last_chunk = self.frontier.get()
+            state, q_id, how_gen, self.last_chunk = self.frontier.get()
+            self.queue_id += 1
             self.working = True
-            print(f'Generating CHUNK {self.last_chunk.coordinate} in state {state.name} with priority {how_gen.name}')
+            print(f'Generating CHUNK {str(self.last_chunk.coordinate):10} ' +
+                  f'in state {str(state.name):10} with priority {str(how_gen.name):10}')
 
             # если данный чанк еще не был сгенерирован -> сгенерировать
             if self.last_chunk.coordinate in self.chunks.INIT:
                 self.chunks.move(self.last_chunk)  # перенос информации из словаря INIT в словарь RELAXING
                 self.last_chunk.run()  # запуск генерации чанка
-                self.frontier.put((ChunkState.RELAXING, how_gen, self.last_chunk))
+                self.frontier.put((ChunkState.RELAXING, self.queue_id, how_gen, self.last_chunk))
 
                 # добавление в очередь для финальной генерации
                 if how_gen == ChunkType.REQUIRED:
-                    self.frontier.put((ChunkState.FREEZE, ChunkType.REQUIRED, self.last_chunk))
+                    self.frontier.put((ChunkState.FREEZE, self.queue_id, ChunkType.REQUIRED, self.last_chunk))
 
             # если чанк еще на этапе релаксации -> вернуть в очередь
             if state is ChunkState.RELAXING:
-                self.frontier.put((self.last_chunk.state, how_gen, self.last_chunk))
+                self.frontier.put((self.last_chunk.state, self.queue_id, how_gen, self.last_chunk))
 
             if how_gen == ChunkType.REQUIRED:
                 # добавление соседних чанков в очередь на генерацию
@@ -57,7 +60,7 @@ class Map:
                         # 2. добавление его в словарь
                         self.chunks.INIT[near_chunk_coord] = new_chunk
                         # 3. добавление его в очередь на генерацию
-                        self.frontier.put((ChunkState.INIT, ChunkType.OUTSKIRTS, new_chunk))
+                        self.frontier.put((ChunkState.INIT, self.queue_id, ChunkType.OUTSKIRTS, new_chunk))
 
         # процесс релаксации сетки каждый кадр
         if self.last_chunk.relax_iter < 100:
@@ -75,11 +78,13 @@ class Map:
     def add(self, pos: Hex) -> None:
         """Добавление чанка в очередь генерации"""
         if pos in self.chunks.FREEZE:
-            self.frontier.put((ChunkState.FREEZE, ChunkType.REQUIRED, self.chunks.FREEZE[pos]))
+            self.queue_id += 1
+            self.frontier.put((ChunkState.FREEZE, self.queue_id, ChunkType.REQUIRED, self.chunks.FREEZE[pos]))
         elif pos not in self.chunks:
             new_chunk = Chunk(pos)
             self.chunks.INIT[pos] = new_chunk
-            self.frontier.put((ChunkState.INIT, ChunkType.REQUIRED, new_chunk))
+            self.queue_id += 1
+            self.frontier.put((ChunkState.INIT, self.queue_id, ChunkType.REQUIRED, new_chunk))
 
 
 if __name__ == '__main__':

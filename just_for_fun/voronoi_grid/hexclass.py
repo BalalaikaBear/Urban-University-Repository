@@ -1,6 +1,5 @@
 import pygame
-from collections.abc import Iterable
-from typing import Callable
+from collections.abc import Iterable, Generator, Callable
 
 _round: Callable = round
 
@@ -13,7 +12,7 @@ class Hex:
 
     __objects = {}  # словарь с уже созданными объектами данного класса
 
-    def __new__(cls, q, r) -> 'Hex':
+    def __new__(cls, q: float, r: float) -> 'Hex':
         """Ограничение на создание одинаковых объектов"""
         key = (q, r)  # создание объекта с координатами
         if key in cls.__objects:  # если объект уже был создан - возвращает его
@@ -23,12 +22,12 @@ class Hex:
             cls.__objects[key] = obj  # добавление нового объекта в словарь созданных объектов
             return obj  # метод __new__ ДОЛЖЕН возвращать ссылку на класс
 
-    def __init__(self, q, r) -> None:
+    def __init__(self, q: float, r: float) -> None:
         self.q = q
         self.r = r
 
     @property
-    def s(self) -> 'Hex':
+    def s(self) -> float:
         """Возвращает координату s"""
         return -self.q - self.r
 
@@ -67,11 +66,10 @@ class Hex:
                 new_hex = new_hex + self.direction(direct)
             return new_hex
 
-    def neighbors(self) -> tuple['Hex', ...]:
-        list_of_hexes = []
+    def neighbors(self) -> Generator['Hex', None, None]:
+        """Генератор, возвращающий соседние ячейки вокруг текущей ячейки"""
         for direct in range(1, 7):
-            list_of_hexes.append(self.neighbor(direct))
-        return tuple(list_of_hexes)
+            yield self.neighbor(direct)
 
     def round(self) -> 'Hex':
         """Возвращает ближайшую ячейку к точке"""
@@ -148,10 +146,12 @@ class Hex:
             return self.q
         elif item == 1 or item == -1 or item == 'r':
             return self.r
+        elif item == 2 or item == -2 or item == 's':
+            return self.s
 
     def __len__(self) -> int:
         """Расстояние до ячейки"""
-        return int((abs(self.q) + abs(self.r)) / 2)
+        return int((abs(self.q) + abs(self.r) + abs(self.s)) / 2)
 
     def __str__(self) -> str:
         return f'({self.q}, {self.r})'
@@ -168,6 +168,7 @@ if __name__ == '__main__':
     #print(pygame.Vector2(2, 2) * pygame.Vector2(3, 6))
     #print(hex_vector.neighbor(3, dist=2))
     print(hex_vector.neighbors())
+    print(len(hex_vector))
     #print(Hex(10, 2).s)
     #print(len(hex_vector))
     #print(dir(hex_vector))

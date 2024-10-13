@@ -61,15 +61,15 @@ class Chunk:
         for i in range(6):
             angle_deg = 60 * i
             angle_rad = math.radians(angle_deg)
-            self.corners.append((self.CHUNK_SIZE * math.cos(angle_rad),
-                                 self.CHUNK_SIZE * math.sin(angle_rad)))
+            self.corners.append((self._x_offset + self.CHUNK_SIZE * math.cos(angle_rad),
+                                 self._y_offset + self.CHUNK_SIZE * math.sin(angle_rad)))
 
         # генерация точек внутри шестиугольника
         while len(self.points) < self.CHUNK_SIZE**2 * 3:
-            x = (random.random()-0.5) * self.CHUNK_SIZE*1.8
-            y = (random.random()-0.5) * self.CHUNK_SIZE*1.6
-            if (-x*sqrt3 - self.CHUNK_SIZE*1.6 < y < -x*sqrt3 + self.CHUNK_SIZE*1.6
-                    and x*sqrt3 - self.CHUNK_SIZE*1.6 < y < x*sqrt3 + self.CHUNK_SIZE*1.6):
+            x = (random.random()-0.5) * self.CHUNK_SIZE*1.8 + self._x_offset
+            y = (random.random()-0.5) * self.CHUNK_SIZE*1.6 + self._y_offset
+            if (-(x-self._x_offset)*sqrt3 - self.CHUNK_SIZE*1.6 + self._y_offset < y < -(x-self._x_offset)*sqrt3 + self.CHUNK_SIZE*1.6 + self._y_offset
+                    and (x-self._x_offset)*sqrt3 - self.CHUNK_SIZE*1.6 + self._y_offset < y < (x-self._x_offset)*sqrt3 + self.CHUNK_SIZE*1.6 + self._y_offset):
                 self.points.append((x, y))
 
         # генерация точек на ребрах шестиугольника
@@ -82,7 +82,7 @@ class Chunk:
         self.points += self.edge_points
 
         # Voronoi
-        self.vor = Voronoi(self.points)
+        self.vor = Voronoi(self.points, incremental=True)
 
     def update(self) -> None:
         """
@@ -100,39 +100,39 @@ class Chunk:
         for segment in self.vor.regions:
             if segment and not -1 in segment:
                 points = [self.vor.vertices[i] for i in segment]
-                area = sum([points[i][0] * points[i + 1][1] - points[i + 1][0] * points[i][1]
+                area = sum((points[i][0] * points[i + 1][1] - points[i + 1][0] * points[i][1]
                             if i != len(segment) - 1
                             else points[i][0] * points[0][1] - points[0][0] * points[i][1]
-                            for i in range(len(segment))]) / 2
-                center_x = sum([(points[i][0] + points[i + 1][0])
+                            for i in range(len(segment)))) / 2
+                center_x = sum(((points[i][0] + points[i + 1][0])
                                 * (points[i][0] * points[i + 1][1] - points[i + 1][0] * points[i][1])
                                 if i != len(segment) - 1
                                 else (points[i][0] + points[0][0])
                                      * (points[i][0] * points[0][1] - points[0][0] * points[i][1])
-                                for i in range(len(segment))]) / (6 * area)
-                center_y = sum([(points[i][1] + points[i + 1][1])
+                                for i in range(len(segment)))) / (6 * area)
+                center_y = sum(((points[i][1] + points[i + 1][1])
                                 * (points[i][0] * points[i + 1][1] - points[i + 1][0] * points[i][1])
                                 if i != len(segment) - 1
                                 else (points[i][1] + points[0][1])
                                      * (points[i][0] * points[0][1] - points[0][0] * points[i][1])
-                                for i in range(len(segment))]) / (6 * area)
+                                for i in range(len(segment)))) / (6 * area)
                 self.points.append((center_x, center_y))
         self.points += self.edge_points
-        self.vor = Voronoi(self.points)
+        self.vor = Voronoi(self.points, incremental=True)
 
     def freeze(self) -> None:
         # изменение состояния чанка
         self.state = ChunkState.FREEZE
 
         # перемещение локальных координат в абсолютную систему координат
-        for i, coordinate in enumerate(self.points):
-            self.points[i] = [coordinate[0] + self._x_offset, coordinate[1] + self._y_offset]
-        for i, coordinate in enumerate(self.corners):
-            self.corners[i] = [coordinate[0] + self._x_offset, coordinate[1] + self._y_offset]
-        for i, coordinate in enumerate(self.edge_points):
-            self.edge_points[i] = [coordinate[0] + self._x_offset, coordinate[1] + self._y_offset]
+        #for i, coordinate in enumerate(self.points):
+        #    self.points[i] = [coordinate[0] + self._x_offset, coordinate[1] + self._y_offset]
+        #for i, coordinate in enumerate(self.corners):
+        #    self.corners[i] = [coordinate[0] + self._x_offset, coordinate[1] + self._y_offset]
+        #for i, coordinate in enumerate(self.edge_points):
+        #    self.edge_points[i] = [coordinate[0] + self._x_offset, coordinate[1] + self._y_offset]
 
-        self.vor = Voronoi(self.points)
+        #self.vor = Voronoi(self.points)
 
     def __lt__(self, other: Self | Hex) -> bool:
         """Меньше чем"""

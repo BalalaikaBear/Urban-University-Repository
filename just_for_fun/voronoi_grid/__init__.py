@@ -5,7 +5,7 @@ import pygame, sys
 
 WIDTH = 1600
 HEIGHT = 1200
-size = 25
+size = 10
 
 # инициализация
 pygame.init()
@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
         if frame == 600:
             print('NEW CHUNK')
-            map_data.add(Hex(1, 0))
+            map_data.add(Hex(1, 1))
 
         #print("FPS:", clock.get_fps())
         pygame.display.update()
