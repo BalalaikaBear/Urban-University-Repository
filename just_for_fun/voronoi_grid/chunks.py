@@ -1,7 +1,8 @@
 import random, math
 from typing import Self
 from enum import IntEnum, auto
-from scipy.spatial import Voronoi
+from scipy.spatial import Voronoi, Delaunay
+from perlin_noise import PerlinNoise
 
 from hexclass import Hex
 from pygame.math import lerp as py_lerp

@@ -4,9 +4,9 @@ from hexclass import Hex
 from cellclass import Cell, Biomes
 
 from queue import PriorityQueue
-from enum import StrEnum, auto
+from enum import IntEnum, auto
 
-class ChunkType(StrEnum):
+class ChunkType(IntEnum):
     """Информация об обязательной генерации чанка"""
     REQUIRED = auto()  # обязательная полностью сгенерированная ячейка
     OUTSKIRTS = auto()  # генерировать до состояния FREEZE

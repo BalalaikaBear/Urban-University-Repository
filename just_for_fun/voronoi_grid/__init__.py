@@ -5,7 +5,7 @@ import pygame, sys
 
 WIDTH = 1600
 HEIGHT = 1200
-size = 10
+size = 25
 
 # инициализация
 pygame.init()
