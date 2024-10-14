@@ -1,4 +1,4 @@
-from chunks import Chunk, ChunkState
+from chunks import ChunkGen, ChunkState
 from chunkdata import ChunksData
 from hexclass import Hex
 from cellclass import Cell, Biomes
@@ -11,10 +11,10 @@ class ChunkType(IntEnum):
     REQUIRED = auto()  # обязательная полностью сгенерированная ячейка
     OUTSKIRTS = auto()  # генерировать до состояния FREEZE
 
-class Map:
+class MapGen:
     def __init__(self) -> None:
-        self.chunks: ChunksData = ChunksData(INIT={Hex(0, 0): Chunk(Hex(0, 0))})
-        self.last_chunk: Chunk = self.chunks.INIT[Hex(0, 0)]
+        self.chunks: ChunksData = ChunksData(INIT={Hex(0, 0): ChunkGen(Hex(0, 0))})
+        self.last_chunk: ChunkGen = self.chunks.INIT[Hex(0, 0)]
 
         # очереди
         self.frontier: PriorityQueue = PriorityQueue()
@@ -56,7 +56,7 @@ class Map:
                 for near_chunk_coord in self.last_chunk.coordinate.neighbors():
                     if near_chunk_coord not in self.chunks:
                         # 1. создание нового чанка
-                        new_chunk: Chunk = Chunk(near_chunk_coord)
+                        new_chunk: ChunkGen = ChunkGen(near_chunk_coord)
                         # 2. добавление его в словарь
                         self.chunks.INIT[near_chunk_coord] = new_chunk
                         # 3. добавление его в очередь на генерацию
@@ -66,6 +66,7 @@ class Map:
         if self.last_chunk.relax_iter < 100:
             self.last_chunk.update()
         elif self.last_chunk.state is ChunkState.RELAXING and self.last_chunk.relax_iter >= 100:
+            self.chunks.move(self.last_chunk)
             self.last_chunk.freeze()
 
         # обновление состояния о работе генерации
@@ -81,11 +82,11 @@ class Map:
             self.queue_id += 1
             self.frontier.put((ChunkState.FREEZE, self.queue_id, ChunkType.REQUIRED, self.chunks.FREEZE[pos]))
         elif pos not in self.chunks:
-            new_chunk = Chunk(pos)
+            new_chunk = ChunkGen(pos)
             self.chunks.INIT[pos] = new_chunk
             self.queue_id += 1
             self.frontier.put((ChunkState.INIT, self.queue_id, ChunkType.REQUIRED, new_chunk))
 
 
 if __name__ == '__main__':
-    game_map = Map()
+    game_map = MapGen()

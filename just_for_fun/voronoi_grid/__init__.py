@@ -1,6 +1,6 @@
-from chunks import Chunk, ChunkState
+from chunks import ChunkGen, ChunkState
 from hexclass import Hex
-from mapclass import Map
+from mapclass import MapGen
 import pygame, sys
 
 WIDTH = 1600
@@ -35,11 +35,18 @@ def draw() -> None:
             for segment in chunk.vor.regions:
                 if segment and -1 not in segment:
                     pygame.draw.lines(screen,
-                                      (180, 180, 200),
+                                      (150, 150, 180),
                                       True,
                                       [(chunk.vor.vertices[i][0] * size + WIDTH / 2,
                                         chunk.vor.vertices[i][1] * size + HEIGHT / 2)
                                        for i in segment])
+            for simpl in chunk.dl.simplices:
+                pygame.draw.lines(screen,
+                                  (190, 190, 190),
+                                  True,
+                                  [(chunk.dl.points[i][0] * size + WIDTH / 2,
+                                    chunk.dl.points[i][1] * size + HEIGHT / 2)
+                                   for i in simpl])
 
     for coordinate, chunk in map_data.chunks.RELAXING.items():
         if chunk.state > ChunkState.INIT:
@@ -69,7 +76,7 @@ def draw() -> None:
 
 
 if __name__ == '__main__':
-    map_data: Map = Map()
+    map_data: MapGen = MapGen()
     frame = 0
 
     # вечно-обновляющийся цикл
@@ -85,7 +92,7 @@ if __name__ == '__main__':
 
         if frame == 600:
             print('NEW CHUNK')
-            map_data.add(Hex(1, 1))
+            map_data.add(Hex(0, 1))
 
         #print("FPS:", clock.get_fps())
         pygame.display.update()

@@ -3,6 +3,8 @@ from collections.abc import Iterable
 from enum import Flag, auto
 from typing import Callable, Optional
 
+from hexclass import Hex
+
 class Biomes(Flag):
     NONE = auto()
 
@@ -32,13 +34,14 @@ class Biomes(Flag):
     OCEAN = auto()
 
 class Cell:
-    __slots__ = ['node', 'edges', 'corners', 'state']
+    __slots__ = ['node', 'edges', 'corners', 'state', 'chunk']
 
     def __init__(self,
                  node: tuple[float, float],
                  edges: Optional[list['Cell']] = None,
                  corners: Optional[list[tuple[float, float]]] = None,
-                 state: Biomes = Biomes.NONE) -> None:
+                 state: Biomes = Biomes.NONE,
+                 chunk: Hex = Hex(1, 1)) -> None:
         """
         :param node: координата ячейки
         :param edges: соседние ячейки
@@ -54,6 +57,8 @@ class Cell:
         else: self.corners = corners
 
         self.state = state
+
+        self.chunk = chunk
 
     def set_state(self, state: Biomes) -> None:
         """Задает состояние ячейки"""

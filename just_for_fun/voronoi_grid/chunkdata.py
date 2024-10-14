@@ -1,37 +1,26 @@
-from chunks import Chunk, ChunkState
+from chunks import ChunkGen, ChunkState
 from hexclass import Hex
 from typing import Optional
 
 class ChunksData:
     def __init__(self, **kwargs) -> None:
-        INIT = True
-        RELAXING = True
-        FREEZE = True
-        GEN_CELLS = True
-        DONE = True
+        self.INIT = {}
+        self.RELAXING = {}
+        self.FREEZE = {}
+        self.GEN_CELLS = {}
+        self.DONE = {}
 
         for key, value in kwargs.items():
             if key == 'INIT':
                 self.INIT = value
-                INIT = False
             if key == 'RELAXING':
                 self.RELAXING = value
-                RELAXING = False
             if key == 'FREEZE':
                 self.FREEZE = value
-                FREEZE = False
             if key == 'GEN_CELLS':
                 self.GEN_CELLS = value
-                GEN_CELLS = False
             if key == 'DONE':
                 self.DONE = value
-                DONE = False
-
-        if INIT: self.INIT = {}
-        if RELAXING: self.RELAXING = {}
-        if FREEZE: self.FREEZE = {}
-        if GEN_CELLS: self.GEN_CELLS = {}
-        if DONE: self.DONE = {}
 
     @property
     def size(self) -> int:
@@ -42,38 +31,38 @@ class ChunksData:
                 len(self.GEN_CELLS) +
                 len(self.DONE))
 
-    def move(self, input: Chunk | Hex, _from: Optional[ChunkState] = None) -> None:
-        if isinstance(input, Chunk):
+    def move(self, inp: ChunkGen | Hex, _from: Optional[ChunkState] = None) -> None:
+        if isinstance(inp, ChunkGen):
             if _from is None:
-                state = input.state
+                state = inp.state
             else:
                 state = _from
 
             if state is ChunkState.INIT:
-                self.RELAXING[input.coordinate] = self.INIT.pop(input.coordinate)
+                self.RELAXING[inp.coordinate] = self.INIT.pop(inp.coordinate)
             elif state is ChunkState.RELAXING:
-                self.FREEZE[input.coordinate] = self.RELAXING.pop(input.coordinate)
+                self.FREEZE[inp.coordinate] = self.RELAXING.pop(inp.coordinate)
             elif state is ChunkState.FREEZE:
-                self.GEN_CELLS[input.coordinate] = self.FREEZE.pop(input.coordinate)
+                self.GEN_CELLS[inp.coordinate] = self.FREEZE.pop(inp.coordinate)
             elif state is ChunkState.GEN_CELLS:
-                self.DONE[input.coordinate] = self.GEN_CELLS.pop(input.coordinate)
+                self.DONE[inp.coordinate] = self.GEN_CELLS.pop(inp.coordinate)
             else:
                 raise ValueError('Cannot move chunk to higher dict')
 
-        elif isinstance(input, Hex):
+        elif isinstance(inp, Hex):
             if _from is None:
-                state = input
+                state = inp
             else:
                 state = _from
 
             if state is ChunkState.INIT:
-                self.RELAXING[input] = self.INIT.pop(input)
+                self.RELAXING[inp] = self.INIT.pop(inp)
             elif state is ChunkState.RELAXING:
-                self.FREEZE[input] = self.RELAXING.pop(input)
+                self.FREEZE[inp] = self.RELAXING.pop(inp)
             elif state is ChunkState.FREEZE:
-                self.GEN_CELLS[input] = self.FREEZE.pop(input)
+                self.GEN_CELLS[inp] = self.FREEZE.pop(inp)
             elif state is ChunkState.GEN_CELLS:
-                self.DONE[input] = self.GEN_CELLS.pop(input)
+                self.DONE[inp] = self.GEN_CELLS.pop(inp)
             else:
                 raise ValueError('Cannot move chunk to higher dict')
 
@@ -96,6 +85,6 @@ class ChunksData:
         )
 
 if __name__ == '__main__':
-    chunk_data = ChunksData(INIT={Hex(0, 0): Chunk(Hex(0, 0))})
+    chunk_data = ChunksData(INIT={Hex(0, 0): ChunkGen(Hex(0, 0))})
     print(chunk_data.INIT, chunk_data.RELAXING)
     print(chunk_data)

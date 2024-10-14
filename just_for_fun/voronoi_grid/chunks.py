@@ -5,13 +5,16 @@ from scipy.spatial import Voronoi, Delaunay
 from perlin_noise import PerlinNoise
 
 from hexclass import Hex
-from pygame.math import lerp as py_lerp
+import pygame.math
 
 sqrt3 = math.sqrt(3)
+noise = PerlinNoise()
+
+CHUNK_SIZE = 12  # количество ячеек на одной из граней шестиугольника
 
 def lerp(pos_a: tuple[float, float], pos_b: tuple[float, float], t: float) -> tuple[float, float]:
     """Линейная интерполяция между двумя точками"""
-    return py_lerp(pos_a[0], pos_b[0], t), py_lerp(pos_a[1], pos_b[1], t)
+    return pygame.math.lerp(pos_a[0], pos_b[0], t), pygame.math.lerp(pos_a[1], pos_b[1], t)
 
 class ChunkState(IntEnum):
     INIT = auto()
@@ -20,14 +23,14 @@ class ChunkState(IntEnum):
     GEN_CELLS = auto()
     DONE = auto()
 
-class Chunk:
-    CHUNK_SIZE = 12  # количество ячеек на одной из граней шестиугольника
+class ChunkGen:
+
 
     def __init__(self, coordinate: Hex) -> None:
         # координаты чанка
         self.coordinate = coordinate
-        self._x_offset: float = coordinate.q * self.CHUNK_SIZE*3/2
-        self._y_offset: float = coordinate.r * self.CHUNK_SIZE*sqrt3 + coordinate.q * self.CHUNK_SIZE*sqrt3/2
+        self._x_offset: float = coordinate.q * CHUNK_SIZE*3/2
+        self._y_offset: float = coordinate.r * CHUNK_SIZE*sqrt3 + coordinate.q * CHUNK_SIZE*sqrt3/2
 
         # состояние чанка
         self.state = ChunkState.INIT
@@ -38,8 +41,9 @@ class Chunk:
         self.corners = []  # координаты вершин шестиугольника
         self.edge_points = []  # точки на ребрах шестиугольника
 
-        # Voronoi объект
+        # Voronoi и Delaunay объекты
         self.vor = None
+        self.dl = None
 
     def run(self):
         self.generate()
@@ -62,20 +66,20 @@ class Chunk:
         for i in range(6):
             angle_deg = 60 * i
             angle_rad = math.radians(angle_deg)
-            self.corners.append((self._x_offset + self.CHUNK_SIZE * math.cos(angle_rad),
-                                 self._y_offset + self.CHUNK_SIZE * math.sin(angle_rad)))
+            self.corners.append((self._x_offset + CHUNK_SIZE * math.cos(angle_rad),
+                                 self._y_offset + CHUNK_SIZE * math.sin(angle_rad)))
 
         # генерация точек внутри шестиугольника
-        while len(self.points) < self.CHUNK_SIZE**2 * 3:
-            x = (random.random()-0.5) * self.CHUNK_SIZE*1.8 + self._x_offset
-            y = (random.random()-0.5) * self.CHUNK_SIZE*1.6 + self._y_offset
-            if (-(x-self._x_offset)*sqrt3 - self.CHUNK_SIZE*1.6 + self._y_offset < y < -(x-self._x_offset)*sqrt3 + self.CHUNK_SIZE*1.6 + self._y_offset
-                    and (x-self._x_offset)*sqrt3 - self.CHUNK_SIZE*1.6 + self._y_offset < y < (x-self._x_offset)*sqrt3 + self.CHUNK_SIZE*1.6 + self._y_offset):
+        while len(self.points) < CHUNK_SIZE**2 * 3:
+            x = (random.random()-0.5) * CHUNK_SIZE*1.8 + self._x_offset
+            y = (random.random()-0.5) * CHUNK_SIZE*1.6 + self._y_offset
+            if (-(x-self._x_offset)*sqrt3 - CHUNK_SIZE*1.6 + self._y_offset < y < -(x-self._x_offset)*sqrt3 + CHUNK_SIZE*1.6 + self._y_offset
+                    and (x-self._x_offset)*sqrt3 - CHUNK_SIZE*1.6 + self._y_offset < y < (x-self._x_offset)*sqrt3 + CHUNK_SIZE*1.6 + self._y_offset):
                 self.points.append((x, y))
 
         # генерация точек на ребрах шестиугольника
         for i in range(6):
-            for step in [x / self.CHUNK_SIZE for x in range(self.CHUNK_SIZE)]:
+            for step in [x / CHUNK_SIZE for x in range(CHUNK_SIZE)]:
                 if i == 5:
                     self.edge_points.append(lerp(self.corners[i], self.corners[0], step))
                 else:
@@ -120,59 +124,52 @@ class Chunk:
                 self.points.append((center_x, center_y))
         self.points += self.edge_points
         self.vor = Voronoi(self.points, incremental=True)
+        self.dl = Delaunay(self.points)
 
     def freeze(self) -> None:
         # изменение состояния чанка
         self.state = ChunkState.FREEZE
+        print(self.dl.points)
 
-        # перемещение локальных координат в абсолютную систему координат
-        #for i, coordinate in enumerate(self.points):
-        #    self.points[i] = [coordinate[0] + self._x_offset, coordinate[1] + self._y_offset]
-        #for i, coordinate in enumerate(self.corners):
-        #    self.corners[i] = [coordinate[0] + self._x_offset, coordinate[1] + self._y_offset]
-        #for i, coordinate in enumerate(self.edge_points):
-        #    self.edge_points[i] = [coordinate[0] + self._x_offset, coordinate[1] + self._y_offset]
-
-        #self.vor = Voronoi(self.points)
 
     def __lt__(self, other: Self | Hex) -> bool:
         """Меньше чем"""
-        if isinstance(other, Chunk):
+        if isinstance(other, ChunkGen):
             return len(self.coordinate) < len(other.coordinate)
         elif isinstance(other, Hex):
             return len(self.coordinate) < len(other)
 
     def __gt__(self, other: Self | Hex) -> bool:
         """Больше чем"""
-        if isinstance(other, Chunk):
+        if isinstance(other, ChunkGen):
             return len(self.coordinate) > len(other.coordinate)
         elif isinstance(other, Hex):
             return len(self.coordinate) > len(other)
 
     def __le__(self, other: Self | Hex) -> bool:
         """Меньше или равно чем"""
-        if isinstance(other, Chunk):
+        if isinstance(other, ChunkGen):
             return len(self.coordinate) <= len(other.coordinate)
         elif isinstance(other, Hex):
             return len(self.coordinate) <= len(other)
 
     def __ge__(self, other: Self | Hex) -> bool:
         """Больше или равно чем"""
-        if isinstance(other, Chunk):
+        if isinstance(other, ChunkGen):
             return len(self.coordinate) >= len(other.coordinate)
         elif isinstance(other, Hex):
             return len(self.coordinate) >= len(other)
 
     def __eq__(self, other: Self | Hex) -> bool:
         """Равно"""
-        if isinstance(other, Chunk):
+        if isinstance(other, ChunkGen):
             return len(self.coordinate) == len(other.coordinate)
         elif isinstance(other, Hex):
             return len(self.coordinate) == len(other)
 
     def __ne__(self, other: Self | Hex) -> bool:
         """Не равно"""
-        if isinstance(other, Chunk):
+        if isinstance(other, ChunkGen):
             return len(self.coordinate) != len(other.coordinate)
         elif isinstance(other, Hex):
             return len(self.coordinate) != len(other)
@@ -181,5 +178,5 @@ class Chunk:
         return f'ChunkGrid(coordinate={self.coordinate}, state={self.state})'
 
 if __name__ == '__main__':
-    chunk = Chunk(coordinate=Hex(1, 0))
-    print(Chunk(Hex(2, 3)) < Chunk(Hex(-1, 4)))
+    chunk = ChunkGen(coordinate=Hex(1, 0))
+    print(ChunkGen(Hex(2, 3)) < ChunkGen(Hex(-1, 4)))
