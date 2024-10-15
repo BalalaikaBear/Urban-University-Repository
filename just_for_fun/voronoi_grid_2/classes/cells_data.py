@@ -18,7 +18,7 @@ class CellsMap:
                     {(0, 41): Cell((0, 41)),
                      (0.2, 0.0003): Cell((0.2, 0.0003)),
                      (13.21, 1.3): Cell((13.21, 1.3))}
-            self.grid: dict[tuple[int, int]: list[Cell]] = {(0, 0): Cell((0.2, 0.0003))}
+            self.grid: dict[tuple[int, int]: list[Cell]] = {(0, 0): [Cell((0.2, 0.0003))]}
 
     def add(self, item: Cell):
         """Добавление ячейки в словарь"""
@@ -35,7 +35,7 @@ class CellsMap:
         if (x, y) not in self.grid:
             self.grid[(x, y)] = [item]
         else:
-            self.grid[(x, y)] += item
+            self.grid[(x, y)].append(item)
 
     def __getitem__(self, item):
         """CellsMap[coord] -> Cell"""
@@ -64,6 +64,6 @@ class CellsMap:
 
 if __name__ == '__main__':
     cell_map = CellsMap()
-    cell_map.add(Cell((0.12, -3)))
+    cell_map.add(Cell((0.12, 0.2)))
     cell_map2 = CellsMap()
     print(cell_map.grid)
