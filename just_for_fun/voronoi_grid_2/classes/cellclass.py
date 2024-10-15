@@ -26,7 +26,8 @@ class Cell:
         """Добавляет соседние ячейки в список и сортирует их по часовой стрелке"""
         for edge in edges:
             self.edges.append(edge)
-        self.edges = sorted(self.edges, key=lambda p: math.atan2(p.node[1] - self.node[1], p.node[0] - self.node[0]))
+        self.edges = sorted(self.edges, key=lambda point: math.atan2(point.node[1] - self.node[1],
+                                                                     point.node[0] - self.node[0]))
 
     def set_state(self, state: Biomes) -> None:
         """Задает состояние ячейки"""
