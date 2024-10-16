@@ -6,7 +6,7 @@ from aiogram.dispatcher import FSMContext
 # клавиатура
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-api: str = '7450975262:AAHfn8KrP5rP9PbEx8HH-EA_G2rT9vqxsbc'  # token to access the HTTP API
+api: str = ''  # token to access the HTTP API
 bot: Bot = Bot(token=api)
 dp: Dispatcher = Dispatcher(bot, storage=MemoryStorage())
 
