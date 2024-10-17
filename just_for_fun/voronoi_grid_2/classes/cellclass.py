@@ -2,7 +2,6 @@ import math
 from typing import Optional
 from just_for_fun.voronoi_grid_2.constants.biomes import Biomes
 
-
 class Cell:
     __slots__ = ['node', 'edges', 'corners', 'state']
 
@@ -29,6 +28,13 @@ class Cell:
         self.edges = sorted(self.edges, key=lambda point: math.atan2(point.node[1] - self.node[1],
                                                                      point.node[0] - self.node[0]))
 
+    def add_corners(self, *corners: tuple[float, float]) -> None:
+        """Добавляет координат края ячейки в список и сортирует их по часовой стрелке"""
+        for corner in corners:
+            self.corners.append(corner)
+        self.corners = sorted(self.corners, key=lambda point: math.atan2(point[1] - self.node[1],
+                                                                         point[0] - self.node[0]))
+
     def set_state(self, state: Biomes) -> None:
         """Задает состояние ячейки"""
         if isinstance(state, Biomes):
@@ -50,5 +56,6 @@ class Cell:
 if __name__ == '__main__':
     print(Biomes.HILL | Biomes.COAST)
     cell = Cell((1, 2), [Cell((1, 1)), Cell((2, 2))], [(1, 0), (-3, -2)], Biomes.HILL)
-    cell.add_edges((Cell((0, 3))), Cell((-2, 11)))
-    print(cell.edges)
+    cell.add_edges(Cell((0, 3)), Cell((-2, 11)))
+    cell.add_corners((4, 2), (-1, 1), (3, 3))
+    print(cell.corners)
