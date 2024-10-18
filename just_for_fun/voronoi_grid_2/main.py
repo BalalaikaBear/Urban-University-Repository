@@ -5,7 +5,7 @@ import pygame, sys
 
 WIDTH = 1600
 HEIGHT = 1200
-size = 25
+size = 20
 
 # инициализация
 pygame.init()
@@ -73,6 +73,12 @@ def draw() -> None:
                                   [(chunk.dl.points[i][0] * size + WIDTH / 2,
                                     chunk.dl.points[i][1] * size + HEIGHT / 2)
                                    for i in simpl])
+            # центры ячеек
+            for point in chunk.points:
+                pygame.draw.circle(screen,
+                                   (50, 150, 255),
+                                   (point[0] * size + WIDTH / 2, point[1] * size + HEIGHT / 2),
+                                   1)
 
 
 if __name__ == '__main__':

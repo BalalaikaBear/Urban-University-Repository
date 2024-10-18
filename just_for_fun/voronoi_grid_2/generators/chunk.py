@@ -8,8 +8,10 @@ from perlin_noise import PerlinNoise
 from just_for_fun.voronoi_grid_2.classes.hexclass import Hex
 import pygame.math
 
+random.seed(1)
+
 sqrt3 = math.sqrt(3)
-noise = PerlinNoise()
+noise = PerlinNoise(seed=1)
 
 CHUNK_SIZE = 12  # количество ячеек на одной из граней шестиугольника
 
@@ -21,7 +23,9 @@ def random_lerp(pos_a: tuple[float, float],
                                   pygame.math.lerp(pos_a[1], pos_b[1], t))
     vector_norm = pygame.Vector2(pos_b[1] - pos_a[1],
                                  pos_a[0] - pos_b[0]).normalize()
-    offset: float = noise.noise(point) * 0.2
+    if vector_norm[0] < 0:
+        vector_norm = -vector_norm
+    offset: float = noise.noise(point) * 0.5
     return (point[0] + vector_norm[0]*offset,
             point[1] + vector_norm[1]*offset)
 
@@ -52,17 +56,25 @@ class ChunkGen:
 
         # центры ячеек
         self.points = []  # все точки чанка
-        self.corners = []  # координаты вершин шестиугольника
-        self.edge_points = []  # точки на ребрах шестиугольника
 
         # Voronoi и Delaunay объекты
         self.vor = None
         self.dl = None
 
-    def run(self):
-        self.generate()
+    @property
+    def corners(self) -> list[tuple[float, float]]:
+        """Возвращает координаты вершин шестиугольника"""
+        return self.points[:6]
 
-    def generate(self) -> None:
+    @property
+    def edge_points(self) -> list[tuple[float, float]]:
+        """Возвращает координаты точек на ребрах шестиугольника"""
+        return self.points[6:CHUNK_SIZE*6]
+
+    def run(self):
+        self.generate_all_points()
+
+    def generate_all_points(self) -> None:
         """
         Генерация сетки в первом приближении
 
@@ -72,38 +84,37 @@ class ChunkGen:
         self.state = ChunkState.RELAXING
 
         # сброс ячеек
-        self.points = []
-        self.corners = []
-        self.edge_points = []
+        self.points = []  # [<corners>, <edge_points>, <inside_points>]
 
         # вершины шестиугольника
         for i in range(6):
             angle_deg = 60 * i
             angle_rad = math.radians(angle_deg)
-            self.corners.append((self._x_offset + CHUNK_SIZE * math.cos(angle_rad),
-                                 self._y_offset + CHUNK_SIZE * math.sin(angle_rad)))
-
-        # генерация точек внутри шестиугольника
-        while len(self.points) < CHUNK_SIZE**2 * 3:
-            x = (random.random()-0.5) * CHUNK_SIZE*1.8 + self._x_offset
-            y = (random.random()-0.5) * CHUNK_SIZE*1.6 + self._y_offset
-            if (-(x-self._x_offset)*sqrt3 - CHUNK_SIZE*1.6 + self._y_offset < y < -(x-self._x_offset)*sqrt3 + CHUNK_SIZE*1.6 + self._y_offset
-                    and (x-self._x_offset)*sqrt3 - CHUNK_SIZE*1.6 + self._y_offset < y < (x-self._x_offset)*sqrt3 + CHUNK_SIZE*1.6 + self._y_offset):
-                self.points.append((x, y))
+            coordinate = (self._x_offset + CHUNK_SIZE * math.cos(angle_rad),
+                          self._y_offset + CHUNK_SIZE * math.sin(angle_rad))
+            self.points.append(coordinate)
 
         # генерация точек на ребрах шестиугольника
         for i in range(6):
-            for step in [x / CHUNK_SIZE for x in range(CHUNK_SIZE)]:
+            for step in [x / CHUNK_SIZE for x in range(1, CHUNK_SIZE)]:
                 if i == 5:
-                    self.edge_points.append(lerp(self.corners[i], self.corners[0], step))
+                    coordinate = random_lerp(self.points[i], self.points[0], step)
+                    self.points.append(coordinate)
                 else:
-                    self.edge_points.append(lerp(self.corners[i], self.corners[i + 1], step))
-        self.points += self.edge_points
+                    coordinate = random_lerp(self.points[i], self.points[i + 1], step)
+                    self.points.append(coordinate)
+
+        # генерация точек внутри шестиугольника
+        while len(self.points) < CHUNK_SIZE**2 * 3 + CHUNK_SIZE*6:
+            x = (random.random()-0.5) * CHUNK_SIZE*1.8 + self._x_offset
+            y = (random.random()-0.5) * CHUNK_SIZE*1.6 + self._y_offset
+            if self._in_bounds(x, y, accuracy=0.9):
+                self.points.append((x, y))
 
         # Voronoi
-        self.vor = Voronoi(self.points, incremental=True)
+        self.vor = Voronoi(self.points, incremental=False)
 
-    def update(self) -> None:
+    def relax_cells_inside(self) -> None:
         """
         Алгоритм релаксации для диаграммы Вороного
 
@@ -115,41 +126,59 @@ class ChunkGen:
 
         # Calculating the area and centroid of a polygon - https://paulbourke.net/geometry/polygonmesh/
         # Lloyd's algorithm - https://en.wikipedia.org/wiki/Lloyd%27s_algorithm
-        self.points = []
-        for segment in self.vor.regions:
-            if segment and not -1 in segment:
-                points = [self.vor.vertices[i] for i in segment]
-                area = sum((points[i][0] * points[i + 1][1] - points[i + 1][0] * points[i][1]
-                            if i != len(segment) - 1
-                            else points[i][0] * points[0][1] - points[0][0] * points[i][1]
-                            for i in range(len(segment)))) / 2
-                center_x = sum(((points[i][0] + points[i + 1][0])
-                                * (points[i][0] * points[i + 1][1] - points[i + 1][0] * points[i][1])
-                                if i != len(segment) - 1
-                                else (points[i][0] + points[0][0])
-                                     * (points[i][0] * points[0][1] - points[0][0] * points[i][1])
-                                for i in range(len(segment)))) / (6 * area)
-                center_y = sum(((points[i][1] + points[i + 1][1])
-                                * (points[i][0] * points[i + 1][1] - points[i + 1][0] * points[i][1])
-                                if i != len(segment) - 1
-                                else (points[i][1] + points[0][1])
-                                     * (points[i][0] * points[0][1] - points[0][0] * points[i][1])
-                                for i in range(len(segment)))) / (6 * area)
+        self.points = self.points[:CHUNK_SIZE*6]  # сброс ячеек
+        for segment_index in self.vor.point_region[CHUNK_SIZE*6:]:
+            # список с повторяемым первым элементом
+            vertice_indexes_in_segment: list = self.vor.regions[segment_index]+self.vor.regions[segment_index][0:1]
+
+            # определение центра образованного полигона
+            area, center_x, center_y = 0, 0, 0
+            for index, i in enumerate(vertice_indexes_in_segment):
+                if index == len(vertice_indexes_in_segment)-1:
+                    break
+                j = vertice_indexes_in_segment[index+1]
+                v0 = self.vor.vertices[i]  # текущая координата из списка
+                v1 = self.vor.vertices[j]  # следующая координата из списка
+                cross = v0[0]*v1[1] - v1[0]*v0[1]
+                area += cross
+                center_x += (v0[0]+v1[0])*cross
+                center_y += (v0[1]+v1[1])*cross
+            area = area/2
+            center_x /= 6*area
+            center_y /= 6*area
+
+            # защита от покидания ячеек сетки
+            if self._in_bounds(center_x, center_y, accuracy=0.95):
                 self.points.append((center_x, center_y))
-        self.points += self.edge_points
-        self.vor = Voronoi(self.points, incremental=True)
+
+        self.vor = Voronoi(self.points, incremental=False)
 
     def freeze(self) -> None:
         # изменение состояния чанка
         self.state = ChunkState.FREEZE
         self.dl = Delaunay(self.points)
 
+    def _in_bounds(self, x: float, y: float, accuracy: float = 1) -> bool:
+        """Проверка координат внутри шестиугольника"""
+        if ((self._x_offset - x - CHUNK_SIZE*accuracy) * sqrt3 + self._y_offset
+                < y < (self._x_offset - x + CHUNK_SIZE*accuracy) * sqrt3 + self._y_offset
+                and (x - self._x_offset - CHUNK_SIZE*accuracy) * sqrt3 + self._y_offset
+                < y < (x - self._x_offset + CHUNK_SIZE*accuracy) * sqrt3 + self._y_offset):
+            return True
+        else:
+            return False
+
     def __repr__(self):
         return f'ChunkGrid(coordinate={self.coordinate}, state={self.state})'
 
 if __name__ == '__main__':
     chunk = ChunkGen(coordinate=Hex(1, 0))
-    chunk.generate()
+    chunk.generate_all_points()
+    for _ in range(20):
+        chunk.relax_cells_inside()
 
+    print(chunk.corners)
+    print("vor.POINTS:", len(chunk.vor.points), chunk.vor.points)
+    print("vor.REGIONS:", len(chunk.vor.regions), chunk.vor.regions)
     fig = voronoi_plot_2d(chunk.vor)
     plt.show()

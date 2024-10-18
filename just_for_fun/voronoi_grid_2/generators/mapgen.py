@@ -42,7 +42,7 @@ class MapGen:
 
         # процесс релаксации сетки каждый кадр
         if self.last_chunk.relax_iter < 30:
-            self.last_chunk.update()
+            self.last_chunk.relax_cells_inside()
         elif self.last_chunk.state is ChunkState.RELAXING and self.last_chunk.relax_iter >= 30:
             self.last_chunk.freeze()
             self.working = False
