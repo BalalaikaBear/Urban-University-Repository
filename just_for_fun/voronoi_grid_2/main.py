@@ -1,11 +1,12 @@
 from just_for_fun.voronoi_grid_2.generators.chunk import ChunkGen, ChunkState
-from just_for_fun.voronoi_grid_2.classes.hexclass import Hex
 from just_for_fun.voronoi_grid_2.generators.mapgen import MapGen
+from just_for_fun.voronoi_grid_2.classes.cells_data import CellsMap
+from just_for_fun.voronoi_grid_2.classes.hexclass import Hex
 import pygame, sys
 
 WIDTH = 1600
 HEIGHT = 1200
-size = 20
+size = 35
 
 # инициализация
 pygame.init()
@@ -30,8 +31,8 @@ def check_events() -> None:
 
 def draw() -> None:
     """Рисование объектов на экране"""
-    for coordinate, chunk in map_data.chunks_dict.items():
-        if ChunkState.INIT < chunk.state < ChunkState.FREEZE:
+    for coordinate, chunk in map_gen.chunks_dict.items():
+        if ChunkState.INIT < chunk.state < ChunkState.GEN_CELLS:
             # центры ячеек
             for point in chunk.points:
                 pygame.draw.circle(screen,
@@ -56,7 +57,7 @@ def draw() -> None:
                                         chunk.vor.vertices[i][1] * size + HEIGHT / 2)
                                        for i in segment])
 
-        elif chunk.state >= ChunkState.FREEZE:
+        elif chunk.state >= ChunkState.GEN_CELLS:
             # сегменты
             for segment in chunk.vor.regions:
                 if segment and -1 not in segment:
@@ -82,7 +83,7 @@ def draw() -> None:
 
 
 if __name__ == '__main__':
-    map_data: MapGen = MapGen()
+    map_gen: MapGen = MapGen(map_data=CellsMap())
     frame = 0
 
     # вечно-обновляющийся цикл
@@ -94,11 +95,11 @@ if __name__ == '__main__':
 
         screen.fill(BACKGROUND)
         draw()
-        map_data.update()
+        map_gen.update()
 
-        if frame == 300:
+        if frame == 100:
             print('NEW CHUNK')
-            map_data.add(Hex(0, 1))
+            map_gen.add(Hex(0, 1))
 
         #print("FPS:", clock.get_fps())
         pygame.display.update()

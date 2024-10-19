@@ -1,4 +1,4 @@
-import random, math
+import random, math, numpy
 from typing import Self
 from enum import IntEnum, auto
 from scipy.spatial import Voronoi, Delaunay, voronoi_plot_2d
@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from perlin_noise import PerlinNoise
 
 from just_for_fun.voronoi_grid_2.classes.hexclass import Hex
+from just_for_fun.voronoi_grid_2.classes.cells_data import CellsMap
+from just_for_fun.voronoi_grid_2.classes.cellclass import Cell
 import pygame.math
 
 random.seed(1)
@@ -13,7 +15,7 @@ random.seed(1)
 sqrt3 = math.sqrt(3)
 noise = PerlinNoise(seed=1)
 
-CHUNK_SIZE = 12  # количество ячеек на одной из граней шестиугольника
+CHUNK_SIZE = 4  # количество ячеек на одной из граней шестиугольника
 
 def random_lerp(pos_a: tuple[float, float],
                 pos_b: tuple[float, float],
@@ -39,7 +41,6 @@ def lerp(pos_a: tuple[float, float],
 class ChunkState(IntEnum):
     INIT = auto()
     RELAXING = auto()
-    FREEZE = auto()
     GEN_CELLS = auto()
     DONE = auto()
 
@@ -52,7 +53,7 @@ class ChunkGen:
 
         # состояние чанка
         self.state = ChunkState.INIT
-        self.relax_iter = 0
+        self.relax_iter = 0  # количество проходов расслабляющего алгоритма
 
         # центры ячеек
         self.points = []  # все точки чанка
@@ -114,7 +115,7 @@ class ChunkGen:
         # Voronoi
         self.vor = Voronoi(self.points, incremental=False)
 
-    def relax_cells_inside(self) -> None:
+    def relax_points_inside(self) -> None:
         """
         Алгоритм релаксации для диаграммы Вороного
 
@@ -153,9 +154,37 @@ class ChunkGen:
 
         self.vor = Voronoi(self.points, incremental=False)
 
-    def freeze(self) -> None:
+    def generate_cells(self, map_data: CellsMap) -> None:
+        """Создание ячеек на карте"""
         # изменение состояния чанка
-        self.state = ChunkState.FREEZE
+        self.state = ChunkState.GEN_CELLS
+
+        for point_index, point in enumerate(self.vor.points):
+            # положение ячейки (координата центра ячейки)
+            cell_node: tuple[float, float] = round(float(point[0]), 5), round(float(point[1]), 5)
+
+            # координаты соседних ячеек
+            cell_edges: list[tuple[float, float]] = []
+            for ridge_point in self.vor.ridge_points:
+                if point_index == ridge_point[0]:
+                    cell_edges.append((round(float(self.vor.points[ridge_point[1]][0]), 5),
+                                       round(float(self.vor.points[ridge_point[1]][1]), 5)))
+                if point_index == ridge_point[1]:
+                    cell_edges.append((round(float(self.vor.points[ridge_point[0]][0]), 5),
+                                       round(float(self.vor.points[ridge_point[0]][1]), 5)))
+
+            # границы ячейки
+            cell_corners: list[tuple[float, float]] = []
+            region: list = self.vor.regions[point_index]
+            for vertice_index in region:
+                if vertice_index != -1:  # не добавлять точку вне чанка
+                    vertice_coord: tuple[float, float] = (round(float(self.vor.vertices[vertice_index][0]), 5),
+                                                          round(float(self.vor.vertices[vertice_index][1]), 5))
+                    if self._in_bounds(*vertice_coord, accuracy=1):
+                        cell_corners.append(vertice_coord)
+
+            map_data.add(cell_node, cell_edges, cell_corners)
+
         self.dl = Delaunay(self.points)
 
     def _in_bounds(self, x: float, y: float, accuracy: float = 1) -> bool:
@@ -175,7 +204,7 @@ if __name__ == '__main__':
     chunk = ChunkGen(coordinate=Hex(1, 0))
     chunk.generate_all_points()
     for _ in range(20):
-        chunk.relax_cells_inside()
+        chunk.relax_points_inside()
 
     print(chunk.corners)
     print("vor.POINTS:", len(chunk.vor.points), chunk.vor.points)

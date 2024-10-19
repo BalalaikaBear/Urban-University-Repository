@@ -1,4 +1,4 @@
-import math
+import math, numpy
 from typing import Optional
 from just_for_fun.voronoi_grid_2.constants.biomes import Biomes
 
@@ -6,9 +6,9 @@ class Cell:
     __slots__ = ['node', 'edges', 'corners', 'state']
 
     def __init__(self,
-                 node: tuple[float, float],
+                 node: tuple[float, float] | numpy.ndarray,
                  edges: Optional[list['Cell']] = None,
-                 corners: Optional[list[tuple[float, float]]] = None,
+                 corners: Optional[list[tuple[float, float] | numpy.ndarray]] = None,
                  state: Biomes = Biomes.NONE) -> None:
         """
         :param node: координата ячейки
@@ -24,14 +24,16 @@ class Cell:
     def add_edges(self, *edges: 'Cell') -> None:
         """Добавляет соседние ячейки в список и сортирует их по часовой стрелке"""
         for edge in edges:
-            self.edges.append(edge)
-        self.edges = sorted(self.edges, key=lambda point: math.atan2(point.node[1] - self.node[1],
-                                                                     point.node[0] - self.node[0]))
+            if edge not in self.edges:
+                self.edges.append(edge)
+        #self.edges = sorted(self.edges, key=lambda point: math.atan2(point.node[1] - self.node[1],
+        #                                                             point.node[0] - self.node[0]))
 
     def add_corners(self, *corners: tuple[float, float]) -> None:
         """Добавляет координат края ячейки в список и сортирует их по часовой стрелке"""
         for corner in corners:
-            self.corners.append(corner)
+            if corner not in self.corners:
+                self.corners.append(corner)
         self.corners = sorted(self.corners, key=lambda point: math.atan2(point[1] - self.node[1],
                                                                          point[0] - self.node[0]))
 
@@ -49,6 +51,11 @@ class Cell:
                 self.state = self.state | state
             else:
                 raise TypeError(f'object {state} is not Biomes(Flag)')
+
+    def __eq__(self, other):
+        return (isinstance(other, Cell)
+                and self.node == other.node and self.edges == other.edges
+                and self.corners == other.corners and self.state == other.state)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.node[0]}, {self.node[1]})'

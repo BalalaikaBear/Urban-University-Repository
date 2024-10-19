@@ -1,6 +1,6 @@
 from just_for_fun.voronoi_grid_2.generators.chunk import ChunkGen, ChunkState
 from just_for_fun.voronoi_grid_2.classes.hexclass import Hex
-from just_for_fun.voronoi_grid_2.classes.cellclass import Cell, Biomes
+from just_for_fun.voronoi_grid_2.classes.cells_data import CellsMap
 
 from queue import Queue
 from enum import IntEnum, auto
@@ -11,7 +11,10 @@ class ChunkType(IntEnum):
     OUTSKIRTS = auto()  # генерировать до состояния FREEZE
 
 class MapGen:
-    def __init__(self) -> None:
+    def __init__(self, map_data: CellsMap) -> None:
+        # карта всех ячеек
+        self.map_data = map_data
+
         # очередь генерации
         chunk = ChunkGen(Hex(0, 0))
         self.chunks: set = {Hex(0, 0)}
@@ -42,9 +45,9 @@ class MapGen:
 
         # процесс релаксации сетки каждый кадр
         if self.last_chunk.relax_iter < 30:
-            self.last_chunk.relax_cells_inside()
+            self.last_chunk.relax_points_inside()
         elif self.last_chunk.state is ChunkState.RELAXING and self.last_chunk.relax_iter >= 30:
-            self.last_chunk.freeze()
+            self.last_chunk.generate_cells(self.map_data)
             self.working = False
 
     def _call_neighbors(self, chunk: ChunkGen = None) -> None:
