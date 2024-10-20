@@ -31,6 +31,9 @@ def check_events() -> None:
 
 def draw() -> None:
     """Рисование объектов на экране"""
+    mouse_coord = pygame.mouse.get_pos()
+    mouse_coord: tuple[float, float] = (mouse_coord[0] - WIDTH / 2) / size, (mouse_coord[1] - HEIGHT / 2) / size
+
     for coordinate, chunk in map_gen.chunks_dict.items():
         if ChunkState.INIT < chunk.state < ChunkState.GEN_CELLS:
             # центры ячеек
@@ -81,9 +84,25 @@ def draw() -> None:
                                    (point[0] * size + WIDTH / 2, point[1] * size + HEIGHT / 2),
                                    1)
 
+    # поиск ближайших ячеек
+    for cell in cells_map.surroundings(cell=cells_map.nearest_cell(mouse_coord),
+                                       distance=1):
+        #if len(cell.corners) >= 3:
+        #    pygame.draw.polygon(screen, (140, 80, 100), [(coord[0]*size + WIDTH/2, coord[1]*size + HEIGHT/2)
+        #                                                 for coord in cell.corners])
+
+        # рисование центры ячеек вокруг
+        if cell:
+            pygame.draw.circle(screen, (50, 50, 50), (cell.node[0] * size + WIDTH / 2, cell.node[1] * size + HEIGHT / 2), 3)
+
+    # рисование центра ячейки под курсором
+    cell = cells_map.nearest_cell(mouse_coord)
+    if cell:
+        pygame.draw.circle(screen, (255, 0, 0), (cell.node[0] * size + WIDTH / 2, cell.node[1] * size + HEIGHT / 2), 5)
 
 if __name__ == '__main__':
-    map_gen: MapGen = MapGen(map_data=CellsMap())
+    cells_map: CellsMap = CellsMap()
+    map_gen: MapGen = MapGen(cells_map)
     frame = 0
 
     # вечно-обновляющийся цикл

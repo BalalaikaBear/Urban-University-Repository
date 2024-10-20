@@ -78,5 +78,10 @@ class MapGen:
 
 
 if __name__ == '__main__':
-    game_map = MapGen()
-    game_map.update()
+    cells_map = CellsMap()
+    map_gen = MapGen(cells_map)
+    for _ in range(50):
+        map_gen.update()
+
+    print(type(cells_map.nearest_cell((0, 0)).edges[0]))
+    print(cells_map.surroundings(cells_map.nearest_cell((0, 0)), 1))

@@ -52,6 +52,9 @@ class Cell:
             else:
                 raise TypeError(f'object {state} is not Biomes(Flag)')
 
+    def __hash__(self) -> int:
+        return hash(self.node)
+
     def __eq__(self, other):
         return (isinstance(other, Cell)
                 and self.node == other.node and self.edges == other.edges

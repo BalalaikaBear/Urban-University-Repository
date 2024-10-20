@@ -99,10 +99,10 @@ class ChunkGen:
         for i in range(6):
             for step in [x / CHUNK_SIZE for x in range(1, CHUNK_SIZE)]:
                 if i == 5:
-                    coordinate = random_lerp(self.points[i], self.points[0], step)
+                    coordinate = lerp(self.points[i], self.points[0], step)
                     self.points.append(coordinate)
                 else:
-                    coordinate = random_lerp(self.points[i], self.points[i + 1], step)
+                    coordinate = lerp(self.points[i], self.points[i + 1], step)
                     self.points.append(coordinate)
 
         # генерация точек внутри шестиугольника
@@ -113,7 +113,7 @@ class ChunkGen:
                 self.points.append((x, y))
 
         # Voronoi
-        self.vor = Voronoi(self.points, incremental=False)
+        self.vor = Voronoi(self.points, incremental=True)
 
     def relax_points_inside(self) -> None:
         """
@@ -152,7 +152,7 @@ class ChunkGen:
             if self._in_bounds(center_x, center_y, accuracy=0.95):
                 self.points.append((center_x, center_y))
 
-        self.vor = Voronoi(self.points, incremental=False)
+        self.vor = Voronoi(self.points, incremental=True)
 
     def generate_cells(self, map_data: CellsMap) -> None:
         """Создание ячеек на карте"""
@@ -192,7 +192,8 @@ class ChunkGen:
         if ((self._x_offset - x - CHUNK_SIZE*accuracy) * sqrt3 + self._y_offset
                 < y < (self._x_offset - x + CHUNK_SIZE*accuracy) * sqrt3 + self._y_offset
                 and (x - self._x_offset - CHUNK_SIZE*accuracy) * sqrt3 + self._y_offset
-                < y < (x - self._x_offset + CHUNK_SIZE*accuracy) * sqrt3 + self._y_offset):
+                < y < (x - self._x_offset + CHUNK_SIZE*accuracy) * sqrt3 + self._y_offset
+                and -sqrt3*CHUNK_SIZE + self._y_offset < y < sqrt3*CHUNK_SIZE + self._y_offset):
             return True
         else:
             return False
