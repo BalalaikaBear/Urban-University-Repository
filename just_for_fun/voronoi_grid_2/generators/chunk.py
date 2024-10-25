@@ -60,7 +60,6 @@ class ChunkGen:
 
         # Voronoi и Delaunay объекты
         self.vor = None
-        self.dl = None
 
     @property
     def corners(self) -> list[tuple[float, float]]:
@@ -159,13 +158,13 @@ class ChunkGen:
         # изменение состояния чанка
         self.state = ChunkState.GEN_CELLS
 
-        for point_index, point in enumerate(self.vor.points):
+        for point_index, point in enumerate(self.vor.points):  # ... in [x, y]
             # положение ячейки (координата центра ячейки)
             cell_node: tuple[float, float] = round(float(point[0]), 5), round(float(point[1]), 5)
 
             # координаты соседних ячеек
             cell_edges: list[tuple[float, float]] = []
-            for ridge_point in self.vor.ridge_points:
+            for ridge_point in self.vor.ridge_points:  # ... in [индекс точки, индекс точки]
                 if point_index == ridge_point[0]:
                     cell_edges.append((round(float(self.vor.points[ridge_point[1]][0]), 5),
                                        round(float(self.vor.points[ridge_point[1]][1]), 5)))
@@ -173,19 +172,11 @@ class ChunkGen:
                     cell_edges.append((round(float(self.vor.points[ridge_point[0]][0]), 5),
                                        round(float(self.vor.points[ridge_point[0]][1]), 5)))
 
-            # границы ячейки
-            cell_corners: list[tuple[float, float]] = []
-            region: list = self.vor.regions[point_index]
-            for vertice_index in region:
-                if vertice_index != -1:  # не добавлять точку вне чанка
-                    vertice_coord: tuple[float, float] = (round(float(self.vor.vertices[vertice_index][0]), 5),
-                                                          round(float(self.vor.vertices[vertice_index][1]), 5))
-                    if self._in_bounds(*vertice_coord, accuracy=1):
-                        cell_corners.append(vertice_coord)
+            # генерация ячейки
+            map_data.add(cell_node, cell_edges)
 
-            map_data.add(cell_node, cell_edges, cell_corners)
-
-        self.dl = Delaunay(self.points)
+        # удаление vor для освобождения памяти
+        del self.vor
 
     def _in_bounds(self, x: float, y: float, accuracy: float = 1) -> bool:
         """Проверка координат внутри шестиугольника"""

@@ -8,7 +8,6 @@ class Cell:
     def __init__(self,
                  node: tuple[float, float],
                  edges: list['Cell'] = None,
-                 corners: list[tuple[float, float]] = None,
                  state: set[Biomes] = None) -> None:
         """
         :param node: координата ячейки
@@ -17,23 +16,37 @@ class Cell:
         :param state: состояние ячейки
         """
         self.node = node
-        self.edges = [] if edges is None else edges
-        self.corners = [] if corners is None else corners
+        if edges is None:
+            self.edges = []
+            self.corners = []
+        else:
+            self.edges = []
+            self.add_edges(*edges)
         self.states = set() if state is None else state
 
     def add_edges(self, *edges: 'Cell') -> None:
         """Добавляет соседние ячейки в список и сортирует их по часовой стрелке"""
+        # добавление ячеек в список
         for edge in edges:
             if edge not in self.edges:
                 self.edges.append(edge)
-        #self.edges = sorted(self.edges, key=lambda point: math.atan2(point.node[1] - self.node[1],
-        #                                                             point.node[0] - self.node[0]))
 
-    def add_corners(self, *corners: tuple[float, float]) -> None:
-        """Добавляет координат края ячейки в список и сортирует их по часовой стрелке"""
-        for corner in corners:
-            if corner not in self.corners:
-                self.corners.append(corner)
+        # сортировка списка по координатам ячеек по часовой стрелке
+        self.edges = sorted(self.edges, key=lambda point: math.atan2(point.node[1] - self.node[1],
+                                                                     point.node[0] - self.node[0]))
+        # обновление координат краев ячейки
+        self.update_corners()
+
+    def update_corners(self):
+        """Определение границ ячейки исходя из соседних клеток"""
+        self.corners = []
+        # список из координат соседних ячеек
+        corners: list[tuple[float, float]] = [(cell.node[0], cell.node[1]) for cell in self.edges + self.edges[:1]]
+        for i in range(len(self.edges)):
+            # определение центроида треугольника
+            self.corners.append((round((self.node[0] + corners[i][0] + corners[i + 1][0]) / 3, 5),
+                                 round((self.node[1] + corners[i][1] + corners[i + 1][1]) / 3, 5)))
+        # сортировка списка координат по часовой стрелке
         self.corners = sorted(self.corners, key=lambda point: math.atan2(point[1] - self.node[1],
                                                                          point[0] - self.node[0]))
 
@@ -70,9 +83,8 @@ class Cell:
         return f'{self.__class__.__name__}({self.node[0]}, {self.node[1]})'
 
 if __name__ == '__main__':
-    cell = Cell((1, 2), [Cell((1, 1)), Cell((2, 2))], [(1, 0), (-3, -2)], {Biomes.HILL})
+    cell = Cell((1, 2), [Cell((1, 1)), Cell((2, 2))], {Biomes.HILL})
     cell.add_edges(Cell((0, 3)), Cell((-2, 11)))
-    cell.add_corners((4, 2), (-1, 1), (3, 3))
     cell.add_state(Biomes.MOUNTAIN, Biomes.ROAD)
     cell.remove_state(Biomes.OCEAN)
     print(cell.states)

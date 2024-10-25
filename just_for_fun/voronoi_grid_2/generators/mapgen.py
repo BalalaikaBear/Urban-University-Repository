@@ -44,19 +44,19 @@ class MapGen:
                 self._call_neighbors()
 
         # процесс релаксации сетки каждый кадр
-        if self.last_chunk.relax_iter < 30:
+        if self.last_chunk.relax_iter < 100:
             self.last_chunk.relax_points_inside()
-        elif self.last_chunk.state is ChunkState.RELAXING and self.last_chunk.relax_iter >= 30:
+        elif self.last_chunk.state is ChunkState.RELAXING and self.last_chunk.relax_iter >= 100:
             self.last_chunk.generate_cells(self.map_data)
             self.working = False
 
-    def _call_neighbors(self, chunk: ChunkGen = None) -> None:
+    def _call_neighbors(self, chunk_pos: Hex = None) -> None:
         """Добавление соседних чанков в очередь на генерацию"""
-        if chunk is None:
-            last_chunk = self.last_chunk
-        else:
-            last_chunk = chunk
-        for near_chunk_coord in last_chunk.coordinate.neighbors():
+        if chunk_pos is None:
+            chunk_pos = self.last_chunk.coordinate
+
+        # определение соседних координат чанка
+        for near_chunk_coord in chunk_pos.neighbors():
             if near_chunk_coord not in self.chunks:
                 # 1. создание нового чанка
                 new_chunk: ChunkGen = ChunkGen(near_chunk_coord)
@@ -69,7 +69,7 @@ class MapGen:
     def add(self, pos: Hex) -> None:
         """Добавление чанка в очередь генерации"""
         if pos in self.chunks:
-            self._call_neighbors()
+            self._call_neighbors(pos)
         else:
             new_chunk = ChunkGen(pos)
             self.chunks.add(new_chunk.coordinate)

@@ -21,11 +21,12 @@ class CellsMap:
 
     def add(self,
             node: tuple[float, float],
-            edges: list[tuple[float, float]],
-            corners: list[tuple[float, float]]) -> None:
+            edges: list[tuple[float, float]]) -> None:
         """Добавление ячейки в словарь"""
-        if node in self.data:
+        if node in self.data:  # если ячейка уже была создана...
             cell: Cell = self.data[node]
+            if not edges and len(cell.edges):
+                cell.update_corners()
 
             # добавление соседей в ячейку
             for edge in edges:
@@ -36,13 +37,11 @@ class CellsMap:
                     self._add_to_search_grid(new_cell)
                 cell.add_edges(self.data[edge])
 
-            # добавление границ ячейки
-            cell.add_corners(*corners)
-
-        else:
+        else:  # создание новой ячейки
             # определение соседей ячейки
             cell_edges = []
             for edge in edges:
+                # если ячейка не была в общем словаре -> добавить
                 if edge not in self.data:
                     new_cell: Cell = Cell(edge)
                     self.data[edge] = new_cell
@@ -50,7 +49,7 @@ class CellsMap:
                 cell_edges.append(self.data[edge])
 
             # создание ячейки и добавление ее в словарь
-            cell: Cell = Cell(node, cell_edges, corners)
+            cell: Cell = Cell(node, cell_edges)
             self.data[cell.node] = cell
             self._add_to_search_grid(cell)
 
@@ -112,6 +111,9 @@ class CellsMap:
                     reached.add(next_cell)
 
         return reached
+
+    def on_screen(self):
+        return self.data.values()
 
     def __getitem__(self, item: tuple[float, float]) -> Cell:
         """CellsMap[coord] -> Cell"""
