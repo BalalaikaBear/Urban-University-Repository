@@ -65,12 +65,12 @@ class MapGen:
         # процесс релаксации сетки каждый кадр
         if self.last_chunk.relax_iter < 100:
             self.last_chunk.update()
-        elif self.last_chunk.states is ChunkState.RELAXING and self.last_chunk.relax_iter >= 100:
+        elif self.last_chunk.state is ChunkState.RELAXING and self.last_chunk.relax_iter >= 100:
             self.chunks.move(self.last_chunk)
             self.last_chunk.freeze()
 
         # обновление состояния о работе генерации
-        if self.last_chunk.states is ChunkState.FREEZE:
+        if self.last_chunk.state is ChunkState.FREEZE:
             # перенос информации из словаря RELAXING в словарь FREEZE
             if self.last_chunk.coordinate not in self.chunks.FREEZE:
                 self.chunks.move(self.last_chunk, _from=ChunkState.RELAXING)
