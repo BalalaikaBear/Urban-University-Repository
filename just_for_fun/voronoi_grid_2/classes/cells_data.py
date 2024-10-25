@@ -58,8 +58,8 @@ class CellsMap:
         """Добавление ячейки в словарь для последующего быстрого поиска"""
         # округление координат
         x, y = cell.node[0], cell.node[1]
-        x = int(x) if x > 0 else int(x) - 1
-        y = int(y) if y > 0 else int(y) - 1
+        x = round(x, 0)
+        y = round(y, 0)
 
         # добавление ячейки в словарь для поиска
         if (x, y) not in self.grid:
@@ -101,9 +101,11 @@ class CellsMap:
         reached.add(cell)
 
         # алгоритм поиска соседей
-        while not frontier.empty() and step < distance:
+        while not frontier.empty():
             step, current_cell = frontier.get()
             current_cell: Cell
+            if step >= distance:
+                break
             for next_cell in current_cell.edges:
                 if next_cell not in reached:
                     frontier.put((step+1, next_cell))

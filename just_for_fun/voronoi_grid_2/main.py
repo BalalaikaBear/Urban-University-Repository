@@ -98,7 +98,7 @@ def draw() -> None:
     # рисование центра ячейки под курсором
     cell = cells_map.nearest_cell(mouse_coord)
     if cell:
-        pygame.draw.circle(screen, (255, 0, 0), (cell.node[0] * size + WIDTH / 2, cell.node[1] * size + HEIGHT / 2), 5)
+        pygame.draw.circle(screen, (240, 0, 0), (cell.node[0] * size + WIDTH / 2, cell.node[1] * size + HEIGHT / 2), 3)
 
 if __name__ == '__main__':
     cells_map: CellsMap = CellsMap()

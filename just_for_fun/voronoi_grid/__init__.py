@@ -30,7 +30,7 @@ def check_events() -> None:
 def draw() -> None:
     """Рисование объектов на экране"""
     for coordinate, chunk in map_data.chunks.FREEZE.items():
-        if chunk.state > ChunkState.INIT:
+        if chunk.states > ChunkState.INIT:
             # сегменты
             for segment in chunk.vor.regions:
                 if segment and -1 not in segment:
@@ -49,7 +49,7 @@ def draw() -> None:
                                    for i in simpl])
 
     for coordinate, chunk in map_data.chunks.RELAXING.items():
-        if chunk.state > ChunkState.INIT:
+        if chunk.states > ChunkState.INIT:
             # центры ячеек
             for point in chunk.points:
                 pygame.draw.circle(screen,
