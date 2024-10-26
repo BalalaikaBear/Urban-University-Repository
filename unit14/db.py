@@ -64,5 +64,18 @@ users: list[tuple] = cursor.fetchall()
 for user in users:
     print("3:", user)
 
+# получить кол-во пользователей из базы данных [COUNT]
+# ВЫБРАТЬ/ВЕРНУТЬ КОЛ-ВО ДАННЫХ ИЗ ТАБЛИЦЫ [Имя таблицы], В КОТОРЫХ [Возраст] > 40
+cursor.execute('SELECT COUNT(*) FROM Users WHERE age > ?',
+               (40, ))
+total: int = cursor.fetchone()[0]  # позволяет получить единичные данные
+print("4:", total)
+
+# получить сумму, среднее, минимальное и максимальное значения
+# ВЫБРАТЬ/ВЕРНУТЬ СУММУ[Возраст], СРЕДНЕЕ[Возраст], МИН[Возраст] и МАКС[Возраст] ИЗ ТАБЛИЦЫ [Имя таблицы]
+cursor.execute('SELECT SUM(age), AVG(age), MIN(age), MAX(age) FROM Users')
+total: tuple = cursor.fetchone()
+print("4:", total)
+
 connection.commit()  # закрытие подключение
 connection.close()  # запоминание состояния
