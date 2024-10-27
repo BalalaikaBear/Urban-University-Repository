@@ -1,8 +1,9 @@
 import sqlite3
 
-connection: sqlite3.Connection = sqlite3.connect('not_telegram.db')  # обращение к базе данных
+connection: sqlite3.Connection = sqlite3.connect('not_telegram2.db')  # обращение к базе данных
 cursor: sqlite3.Cursor = connection.cursor()
 
+# ПРЕДЫДУЩЕЕ ЗАДАНИЕ ------------------------------------------------------------------------------------------------ *
 # Все ключевые команды пишутся КАПСОМ
 # Все имена объектов пишутся с Заглавной Буквы
 cursor.execute('''
@@ -30,8 +31,11 @@ for i in range(1, 11, 3):
     cursor.execute('DELETE FROM Users WHERE username = ?',
                    (f'User{i}', ))
 
-# получить указанные данные из таблицы
-cursor.execute('SELECT * FROM Users')
-data: list[tuple] = cursor.fetchall()
-for line in data:
-    print('Имя:', line)
+# ТЕКУЩЕЕ ЗАДАНИЕ --------------------------------------------------------------------------------------------------- *
+# удаление пользователя с номером id = 6
+cursor.execute('DELETE FROM Users WHERE id = 6')
+
+# получить кол-во пользователей, сумму денег, и средний баланс
+cursor.execute('SELECT COUNT(*), SUM(balance), AVG(balance) FROM Users')
+users_amount, users_sum, users_avg = cursor.fetchone()
+print(users_avg)

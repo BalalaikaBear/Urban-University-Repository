@@ -77,5 +77,5 @@ cursor.execute('SELECT SUM(age), AVG(age), MIN(age), MAX(age) FROM Users')
 total: tuple = cursor.fetchone()
 print("4:", total)
 
-connection.commit()  # закрытие подключение
+connection.commit()  # закрытие подключения
 connection.close()  # запоминание состояния
