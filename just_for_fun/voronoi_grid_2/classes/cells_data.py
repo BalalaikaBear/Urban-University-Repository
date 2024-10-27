@@ -4,6 +4,7 @@ from functools import lru_cache
 
 from just_for_fun.voronoi_grid_2.classes.hexclass import Hex
 from just_for_fun.voronoi_grid_2.classes.cellclass import Cell
+from just_for_fun.voronoi_grid_2.constants.biomes import Biomes
 
 class CellsMap:
     __instance = None
@@ -21,12 +22,17 @@ class CellsMap:
 
     def add(self,
             node: tuple[float, float],
-            edges: list[tuple[float, float]]) -> None:
+            edges: list[tuple[float, float]],
+            state: set | Biomes | None = None) -> None:
         """Добавление ячейки в словарь"""
         if node in self.data:  # если ячейка уже была создана...
             cell: Cell = self.data[node]
-            if not edges and len(cell.edges):
-                cell.update_corners()
+            # добавление состояния в ячейку
+            if state:
+                if isinstance(state, Biomes):
+                    cell.add_state(state)
+                else:
+                    cell.add_state(*state)
 
             # добавление соседей в ячейку
             for edge in edges:
@@ -50,6 +56,11 @@ class CellsMap:
 
             # создание ячейки и добавление ее в словарь
             cell: Cell = Cell(node, cell_edges)
+            if state:
+                if isinstance(state, Biomes):
+                    cell.add_state(state)
+                else:
+                    cell.add_state(*state)
             self.data[cell.node] = cell
             self._add_to_search_grid(cell)
 

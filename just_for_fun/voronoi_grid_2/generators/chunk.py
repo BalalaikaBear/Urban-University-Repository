@@ -8,6 +8,8 @@ from perlin_noise import PerlinNoise
 from just_for_fun.voronoi_grid_2.classes.hexclass import Hex
 from just_for_fun.voronoi_grid_2.classes.cells_data import CellsMap
 from just_for_fun.voronoi_grid_2.classes.cellclass import Cell
+from just_for_fun.voronoi_grid_2.generators.worldgen import WorldGen
+from just_for_fun.voronoi_grid_2.constants.biomes import Biomes
 import pygame.math
 
 random.seed(1)
@@ -15,19 +17,28 @@ random.seed(1)
 sqrt3 = math.sqrt(3)
 noise = PerlinNoise(seed=1)
 
-CHUNK_SIZE = 4  # количество ячеек на одной из граней шестиугольника
+CHUNK_SIZE = 10  # количество ячеек на одной из граней шестиугольника
 
 def random_lerp(pos_a: tuple[float, float],
                 pos_b: tuple[float, float],
                 t: float) -> tuple[float, float]:
     """Линейная интерполяция между двумя точками со случайным смещением"""
+    # координаты точки, после интерполяции
     point: tuple[float, float] = (pygame.math.lerp(pos_a[0], pos_b[0], t),
                                   pygame.math.lerp(pos_a[1], pos_b[1], t))
+
+    # нормаль к линии интерполяции
     vector_norm = pygame.Vector2(pos_b[1] - pos_a[1],
                                  pos_a[0] - pos_b[0]).normalize()
-    if vector_norm[0] < 0:
+
+    # исключение определения двух нормалей к линии
+    if pos_b[0] >= pos_a[0]:
         vector_norm = -vector_norm
-    offset: float = noise.noise(point) * 0.5
+
+    # смещение точки вдоль нормали
+    offset: float = noise.noise(point) * 0.8
+
+    # новая координата точки
     return (point[0] + vector_norm[0]*offset,
             point[1] + vector_norm[1]*offset)
 
@@ -37,6 +48,9 @@ def lerp(pos_a: tuple[float, float],
     """Линейная интерполяция между двумя точками"""
     return (pygame.math.lerp(pos_a[0], pos_b[0], t),
             pygame.math.lerp(pos_a[1], pos_b[1], t))
+
+def square_length(a: tuple[float, float], b: tuple[float, float]) -> float:
+    return (b[0]-a[0])**2 + (b[1]-a[1])**2
 
 class ChunkState(IntEnum):
     INIT = auto()
@@ -98,10 +112,10 @@ class ChunkGen:
         for i in range(6):
             for step in [x / CHUNK_SIZE for x in range(1, CHUNK_SIZE)]:
                 if i == 5:
-                    coordinate = lerp(self.points[i], self.points[0], step)
+                    coordinate = random_lerp(self.points[i], self.points[0], step)
                     self.points.append(coordinate)
                 else:
-                    coordinate = lerp(self.points[i], self.points[i + 1], step)
+                    coordinate = random_lerp(self.points[i], self.points[i + 1], step)
                     self.points.append(coordinate)
 
         # генерация точек внутри шестиугольника
@@ -164,16 +178,20 @@ class ChunkGen:
 
             # координаты соседних ячеек
             cell_edges: list[tuple[float, float]] = []
-            for ridge_point in self.vor.ridge_points:  # ... in [индекс точки, индекс точки]
-                if point_index == ridge_point[0]:
-                    cell_edges.append((round(float(self.vor.points[ridge_point[1]][0]), 5),
-                                       round(float(self.vor.points[ridge_point[1]][1]), 5)))
-                if point_index == ridge_point[1]:
-                    cell_edges.append((round(float(self.vor.points[ridge_point[0]][0]), 5),
-                                       round(float(self.vor.points[ridge_point[0]][1]), 5)))
+            for ridge_point_index in self.vor.ridge_points:  # ... in [индекс точки, индекс точки]
+                if point_index == ridge_point_index[0]:
+                    # исключение ячеек, расстояние между которыми больше заданного числа
+                    if square_length(point, self.vor.points[ridge_point_index[1]]) < 2:
+                        cell_edges.append((round(float(self.vor.points[ridge_point_index[1]][0]), 5),
+                                           round(float(self.vor.points[ridge_point_index[1]][1]), 5)))
+                if point_index == ridge_point_index[1]:
+                    # исключение ячеек, расстояние между которыми больше заданного числа
+                    if square_length(point, self.vor.points[ridge_point_index[0]]) < 2:
+                        cell_edges.append((round(float(self.vor.points[ridge_point_index[0]][0]), 5),
+                                           round(float(self.vor.points[ridge_point_index[0]][1]), 5)))
 
             # генерация ячейки
-            map_data.add(cell_node, cell_edges)
+            map_data.add(cell_node, cell_edges, WorldGen(1).cell_type(cell_node))
 
         # удаление vor для освобождения памяти
         del self.vor

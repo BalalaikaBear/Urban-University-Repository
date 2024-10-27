@@ -1,7 +1,9 @@
 from just_for_fun.voronoi_grid_2.generators.chunk import ChunkGen, ChunkState
 from just_for_fun.voronoi_grid_2.generators.mapgen import MapGen
+from just_for_fun.voronoi_grid_2.classes.cellclass import Cell
 from just_for_fun.voronoi_grid_2.classes.cells_data import CellsMap
 from just_for_fun.voronoi_grid_2.classes.hexclass import Hex
+from just_for_fun.voronoi_grid_2.constants.biomes import Biomes
 import pygame, sys
 
 WIDTH = 1600
@@ -63,13 +65,21 @@ def draw() -> None:
 
     # отображение сгенерированных ячеек
     for cell in cells_map.on_screen():
+        cell: Cell
         # сегменты
-        pygame.draw.lines(screen,
-                          (150, 150, 180),
-                          True,
-                          [(cell.corners[i][0] * size + WIDTH / 2,
-                            cell.corners[i][1] * size + HEIGHT / 2)
-                           for i in range(len(cell.corners))])
+        if Biomes.OCEAN in cell.states:
+            pygame.draw.polygon(screen,
+                                (140, 190, 240),
+                                [(cell.corners[i][0] * size + WIDTH / 2,
+                                  cell.corners[i][1] * size + HEIGHT / 2)
+                                 for i in range(len(cell.corners))])
+        else:
+            pygame.draw.lines(screen,
+                              (150, 150, 180),
+                              True,
+                              [(cell.corners[i][0] * size + WIDTH / 2,
+                                cell.corners[i][1] * size + HEIGHT / 2)
+                               for i in range(len(cell.corners))])
         # центры ячеек
         pygame.draw.circle(screen,
                            (50, 150, 255),
