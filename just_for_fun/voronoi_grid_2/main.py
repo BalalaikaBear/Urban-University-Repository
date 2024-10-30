@@ -15,11 +15,11 @@ pygame.init()
 running = True
 
 # цвета
-BACKGROUND = pygame.color.Color(200, 200, 200)
+BACKGROUND: pygame.Color = pygame.color.Color(200, 200, 200)
 
 # настройки стандартных элементов pygame
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-clock = pygame.time.Clock()
+screen: pygame.Surface = pygame.display.set_mode((WIDTH, HEIGHT))
+clock: pygame.time.Clock = pygame.time.Clock()
 
 def check_events() -> None:
     """Фиксация нажатия клавиш"""
@@ -33,8 +33,8 @@ def check_events() -> None:
 
 def draw() -> None:
     """Рисование объектов на экране"""
-    mouse_coord = pygame.mouse.get_pos()
-    mouse_coord: tuple[float, float] = (mouse_coord[0] - WIDTH / 2) / size, (mouse_coord[1] - HEIGHT / 2) / size
+    mouse_screen_coord: tuple[int, int] = pygame.mouse.get_pos()
+    mouse_world_coord: tuple[float, float] = (mouse_screen_coord[0] - WIDTH / 2) / size, (mouse_screen_coord[1] - HEIGHT / 2) / size
 
     # отображение генерируемых чанков
     for coordinate, chunk in map_gen.chunks_dict.items():
@@ -87,7 +87,7 @@ def draw() -> None:
                            1)
 
     # поиск ближайших ячеек
-    for cell in cells_map.surroundings(cell=cells_map.nearest_cell(mouse_coord),
+    for cell in cells_map.surroundings(cell=cells_map.nearest_cell(mouse_world_coord),
                                        distance=1):
         if len(cell.corners) >= 3:
             pygame.draw.polygon(screen, (140, 80, 100), [(coord[0]*size + WIDTH/2, coord[1]*size + HEIGHT/2)
@@ -100,7 +100,7 @@ def draw() -> None:
             pygame.draw.circle(screen, (50, 50, 50), (cell.node[0] * size + WIDTH / 2, cell.node[1] * size + HEIGHT / 2), 3)
 
     # рисование центра ячейки под курсором
-    cell = cells_map.nearest_cell(mouse_coord)
+    cell = cells_map.nearest_cell(mouse_world_coord)
     if cell:
         pygame.draw.circle(screen, (240, 0, 0), (cell.node[0] * size + WIDTH / 2, cell.node[1] * size + HEIGHT / 2), 3)
 
