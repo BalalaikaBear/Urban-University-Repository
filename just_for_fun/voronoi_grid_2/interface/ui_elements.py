@@ -3,21 +3,27 @@ class Text:
     def __init__(self,
                  text: str,
                  front: str = 'Arial',
-                 size: int = 24) -> None:
+                 size_mult: float | None = None) -> None:
         self.text = text
         self.front = front
-        self.size = size
+        self.size = size_mult
         print(f'Text({self.text = }, {self.front = }, {self.size = })')
+
+    def __repr__(self) -> str:
+        return f'Text({self.text})'
 
 
 class Icon:
     """Объект, хранящий информацию об иконке"""
     def __init__(self,
                  img: str,
-                 size: int | tuple[int, int] = 24) -> None:
+                 size_mult: float | None = None) -> None:
         self.img = img
-        self.size = size
+        self.size = size_mult
         print(f'Icon({self.img = }, {self.size = })')
+
+    def __repr__(self) -> str:
+        return f'Icon({self.img})'
 
 
 class IconText(Text, Icon):
@@ -26,9 +32,12 @@ class IconText(Text, Icon):
                  text: str,
                  img: str,
                  front: str = 'Arial',
-                 size: int = 24) -> None:
-        Text.__init__(self, text, front, size)  # вызов Text
-        Icon.__init__(self, img, size)  # вызов Icon
+                 size_mult: float | None = None) -> None:
+        Text.__init__(self, text, front, size_mult)  # вызов Text
+        Icon.__init__(self, img, size_mult)  # вызов Icon
+
+    def __repr__(self) -> str:
+        return f'IconText({self.text})'
 
 
 class CheckBox:
@@ -54,8 +63,11 @@ class CheckBox:
         """Устанавливает состояние флажка"""
         self.state = state
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return self.state
+
+    def __repr__(self) -> str:
+        return f'CheckBox({self.state})'
 
 
 class Slider:
@@ -72,8 +84,11 @@ class Slider:
         else:
             self.value = default_value
 
+    def __repr__(self) -> str:
+        return f'Slider({self.value})'
+
 if __name__ == '__main__':
-    iron: IconText = IconText('Iron', 'iron.png', 'Arial', 8)
+    iron: IconText = IconText('Iron', 'iron.png', 'Arial', 1.2)
     print(dir(iron))
     slider: Slider = Slider(10, 15, 5)
     print(slider.min_value, slider.max_value)
