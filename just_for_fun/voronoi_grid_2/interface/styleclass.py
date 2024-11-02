@@ -25,6 +25,9 @@ class Style:
         # окно
         self.canvas_radius: int = 10
         self.canvas_spacing: int = 10
+        self.canvas_color: pygame.Color = pygame.color.Color('#F3F2EE')
+        self.shadow_size: int = 20
+        self.shadow_color: pygame.Color = pygame.color.Color('#BBBBBB')
 
         # курсор
         self.cursor_size: tuple[int, int] = 20, 20
@@ -136,12 +139,8 @@ class Style:
 
             window_coord: tuple[int, int] = wx, wy
 
-        # рамка окна
-        pygame.draw.rect(self.screen,
-                         (0, 0, 0),
-                         [window_coord, (self.window_width, self.window_height)],
-                         2,
-                         border_radius=self.canvas_radius)
+        # рисование окна
+        self.draw_rect_with_shadow(window_coord)
 
         # рисование объектов в окне
         for line in self.objects:
@@ -171,3 +170,24 @@ class Style:
                 # слайдер
                 elif isinstance(item, Slider):
                     print(item.value)
+
+    def draw_rect_with_shadow(self, window_coord: tuple[int, int]) -> None:
+        # поверхность, на которой рисуется окно
+        shadow_surface: pygame.Surface = pygame.Surface((self.window_width + 2*self.shadow_size,
+                                                         self.window_height + 2*self.shadow_size)).convert_alpha()
+        shadow_surface.fill((255, 255, 255, 0))
+        # рисование тени
+        pygame.draw.rect(shadow_surface,
+                         self.shadow_color,
+                         (self.shadow_size, self.shadow_size, self.window_width, self.window_height),
+                         border_radius=self.canvas_radius)
+
+        # размытие тени
+        shadow_surface = pygame.transform.gaussian_blur(shadow_surface, self.shadow_size // 2)
+        # рисование окна
+        pygame.draw.rect(shadow_surface,
+                         self.canvas_color,
+                         (self.shadow_size, self.shadow_size, self.window_width, self.window_height),
+                         border_radius=self.canvas_radius)
+        # рисование окна на основном экране
+        self.screen.blit(shadow_surface, (window_coord[0] - self.shadow_size, window_coord[1] - self.shadow_size))
