@@ -2,13 +2,14 @@ from pprint import pprint
 from typing import Any
 import pygame
 
+from just_for_fun.voronoi_grid_2.interface.constants.anchors import Anchor
 from just_for_fun.voronoi_grid_2.interface.ui_elements import *
 
 class Style:
     """Визуальный стиль окна"""
     def __init__(self,
                  screen: pygame.Surface,
-                 anchor: tuple[int, int] | str,
+                 anchor: tuple[int, int] | Anchor,
                  objects: list[list[Any]],
                  is_table: bool = False) -> None:
         self.screen = screen
@@ -107,10 +108,9 @@ class Style:
             self.window_height += line_height + self.line_spacing
         self.window_height += self.canvas_spacing
 
-    def draw(self) -> None:
-        """Рисование окна на экране"""
-        # определение координаты отрисовки окна
-        if self.anchor == 'mouse':
+    def draw_pos(self) -> tuple[int, int]:
+        """Определение координаты отрисовки окна"""
+        if self.anchor == Anchor.MOUSE:
             mouse_pos: tuple[int, int] = pygame.mouse.get_pos()
             screen_size: tuple[int, int] = self.screen.get_size()
 
@@ -136,8 +136,15 @@ class Style:
                 else:  # право низ (стандартное положение)
                     wy: int = max(mouse_pos[1] + self.cursor_size[1],
                                   self.border)
+            return wx, wy
 
-            window_coord: tuple[int, int] = wx, wy
+        elif self.anchor == Anchor.TOP_LEFT:
+            return self.border, self.border
+
+    def draw(self) -> None:
+        """Рисование окна на экране"""
+        # определение координаты отрисовки окна
+        window_coord: tuple[int, int] = self.draw_pos()
 
         # рисование окна
         self.draw_rect_with_shadow(window_coord)
@@ -151,7 +158,7 @@ class Style:
 
                 # иконка с текстом
                 if isinstance(item, IconText):
-                    print(item.text, item.img)
+                    continue
 
                 # текст
                 elif isinstance(item, Text):
@@ -161,15 +168,15 @@ class Style:
 
                 # иконка
                 elif isinstance(item, Icon):
-                    print(item.img)
+                    continue
 
                 # окно флажка
                 elif isinstance(item, CheckBox):
-                    print(item.named_state)
+                    continue
 
                 # слайдер
                 elif isinstance(item, Slider):
-                    print(item.value)
+                    continue
 
     def draw_rect_with_shadow(self, window_coord: tuple[int, int]) -> None:
         # поверхность, на которой рисуется окно
