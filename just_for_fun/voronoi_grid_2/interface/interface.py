@@ -37,14 +37,18 @@ class Interface:
 
     def pointed(self, window: Window) -> None:
         """Определение наведения на окно"""
-        if window.inside(mouse_pos := pygame.mouse.get_pos()):
-            current_value: tuple[int, int] = mouse_pos[0] // 5, mouse_pos[1] // 5
+        mouse_pos: tuple[int, int] = pygame.mouse.get_pos()
+        current_value: tuple[int, int] = mouse_pos[0] // 5, mouse_pos[1] // 5
+        if window.inside(mouse_pos):
             if current_value != self.previous_value:
                 if self.timer is not None:
                     self.timer.cancel()
                 self.timer: threading.Timer = threading.Timer(2, window.pointed)
                 self.timer.start()
             self.previous_value = current_value
+        else:
+            if current_value != self.previous_value and self.timer is not None:
+                self.timer.cancel()
 
     def force_pointed(self) -> None:
         """Показывает справочное окно при нажатии"""
