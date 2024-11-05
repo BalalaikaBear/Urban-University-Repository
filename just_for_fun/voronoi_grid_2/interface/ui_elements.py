@@ -1,3 +1,5 @@
+from typing import Any
+
 class Text:
     """Объект, хранящий информацию об отображаемом тексте"""
     def __init__(self,
@@ -17,9 +19,12 @@ class Icon:
     """Объект, хранящий информацию об иконке"""
     def __init__(self,
                  img: str,
-                 size_mult: float | None = None) -> None:
+                 size_mult: float | None = None,
+                 window: Any = None) -> None:
         self.img = img
         self.size = size_mult
+        if window:
+            self.window = window
         print(f'Icon({self.img = }, {self.size = })')
 
     def __repr__(self) -> str:
@@ -32,9 +37,10 @@ class IconText(Text, Icon):
                  text: str,
                  img: str,
                  front: str = 'Arial',
-                 size_mult: float | None = None) -> None:
+                 size_mult: float | None = None,
+                 window: Any = None) -> None:
         Text.__init__(self, text, front, size_mult)  # вызов Text
-        Icon.__init__(self, img, size_mult)  # вызов Icon
+        Icon.__init__(self, img, size_mult, window)  # вызов Icon
 
     def __repr__(self) -> str:
         return f'IconText({self.text})'

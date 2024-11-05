@@ -83,10 +83,12 @@ if __name__ == '__main__':
 
     window_left_menu = Window(screen, Anchor.TOP_LEFT,
                               objects=[
-                                  [Icon('menu.png')]
+                                  [Icon('menu.png', window=Window(screen, Anchor.MOUSE, objects=[
+                                      [Text('Note')]
+                                  ]))]
                               ])
 
-    GUI = Interface(screen, [window_mouse, window_left_menu])
+    GUI = Interface(screen, [window_left_menu, window_mouse])
 
     # игровой цикл
     while running:
