@@ -80,6 +80,7 @@ if __name__ == '__main__':
     clock: pygame.time.Clock = pygame.time.Clock()
 
     window_left_menu = Window(Container(TextBox('This is a TestBox message')))
+    print(window_left_menu.widgets)
 
     GUI = Interface(screen, [window_left_menu], debug_mode=True)
 

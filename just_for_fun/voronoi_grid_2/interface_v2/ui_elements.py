@@ -43,10 +43,43 @@ class Container:
         return f'Container()'
 
 
-class TextBox(Container):
-    """Текст"""
-    def __init__(self, text: str, multiline: bool = True):
+class WordBox(Container):
+    """Контейнер с единственным словом"""
+    __slots__ = ['word', 'rect', 'bold', 'italic', 'size', 'color', 'font_style', 'font', 'parent', 'touchable']
+
+    def __init__(self, word: str, size: int, font: str):
         super().__init__()
+        self.word = word
+        self.font = None
+        self.rect = None
+
+        # стиль текста
+        self.bold = False
+        self.italic = False
+        self.color = None
+        self.size = size
+        self.font_style = font
+
+    def size_of_container(self) -> pygame.Rect:
+        """Расчёт размера контейнера"""
+        self.font: pygame.Font = pygame.font.SysFont(self.font_style, self.size, self.bold, self.italic)
+        self.rect: pygame.Rect = pygame.Rect(0, 0, *self.font.size(self.word))
+        return self.rect
+
+    def __repr__(self) -> str:
+        return self.word
+
+
+class TextBox(Container):
+    """Контейнер с текстом"""
+    def __init__(self, text: str, multiline: bool = True):
+        # разбиение текста на слова для создания отдельных текстовых контейнеров
+        text_split = text.split()
+        list_of_WordBoxes: list[Container] = []
+        for word in text_split:
+            list_of_WordBoxes.append(WordBox(word, 12, 'Arial'))
+        super().__init__(*list_of_WordBoxes, parent=self)
+
         self.text = text
         self.multiline = multiline
 
