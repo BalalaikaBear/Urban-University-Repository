@@ -6,7 +6,10 @@ class Container:
     def __init__(self,
                  *children: 'Container',
                  parent: Optional['Container'] = None,
-                 max_size: tuple[int, int] = None) -> None:
+                 max_size: tuple[int, int] = None,
+                 touchable: bool = False) -> None:
+        self.touchable = touchable
+
         if children:
             self.children: tuple['Container', ...] = children
 
