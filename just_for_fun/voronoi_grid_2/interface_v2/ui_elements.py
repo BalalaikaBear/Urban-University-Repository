@@ -24,10 +24,10 @@ class Container:
 
     def size_of_container(self) -> pygame.Rect:
         """Расчёт размера контейнера"""
-        return pygame.Rect(0, 0, 400, 50)
+        return pygame.Rect(0, 0, 10, 10)
 
     def _size_calc(self, *children: 'Container', parent: 'Container') -> pygame.Rect:
-        """Расчет размера контейнера через рекурсию собственных атрибутов"""
+        """Расчет размера контейнера через определение минимальных размеров детей"""
         # собственный размер контейнера
         self.min_size: pygame.Rect = self.size_of_container()
 

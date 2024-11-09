@@ -7,7 +7,7 @@ import pygame
 class Interface:
     def __init__(self, screen: pygame.Surface, windows: list[Window], *, debug_mode: bool = False):
         self.final_screen = screen  # поверхность, на которую будет выводиться интерфейс
-        self.ui_screen: pygame.Surface = pygame.Surface(self.final_screen.size)  # поверхность с отрисованным интерфейсом
+        self.ui_screen: pygame.Surface = pygame.Surface(self.final_screen.size).convert_alpha()  # поверхность с отрисованным интерфейсом
         self.windows = windows  # список всех окон на экране
 
         # режим отладки (отображение краев контейнеров)
@@ -69,6 +69,15 @@ class Interface:
             if widget and hasattr(widget, 'pointed'):
                 widget.pointed()
 
+    def draw(self) -> None:
+        self.ui_screen.fill((0, 0, 0, 0))  # окраска экрана интерфейса
+
+        # отрисовка окон
+        for window in self.windows:
+            pygame.draw.rect(self.ui_screen, '#99D9EA', window.rect, 1)
+
+        self.final_screen.blit(self.ui_screen, (0, 0))  # проецирование интерфейса на экран
+
 if __name__ == '__main__':
     WIDTH = 1600
     HEIGHT = 1200
@@ -79,7 +88,7 @@ if __name__ == '__main__':
     screen: pygame.Surface = pygame.display.set_mode((WIDTH, HEIGHT))
     clock: pygame.time.Clock = pygame.time.Clock()
 
-    window_left_menu = Window(Container(TextBox('This is a TestBox message')))
+    window_left_menu = Window(Container(TextBox('This is a TestBox message'), max_size=(400, 1000)))
     print(window_left_menu.widgets)
 
     GUI = Interface(screen, [window_left_menu], debug_mode=True)
@@ -103,7 +112,7 @@ if __name__ == '__main__':
 
         screen.fill(BACKGROUND)
 
-        #GUI.draw()
+        GUI.draw()
 
         pygame.display.update()
     pygame.quit()
