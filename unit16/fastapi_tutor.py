@@ -5,6 +5,8 @@ app = FastAPI()
 
 # fastapi dev unit16/fastapi_tutor.py - запуск файла
 
+messages_db = {"0": "First post in FastAPI"}
+
 # виды запросов
 # get - адрес в строке ?<переменная>=<значение>
 # post - формы - оформить заказ в магазине
@@ -12,8 +14,33 @@ app = FastAPI()
 # delete - запрос типа удаления
 
 @app.get('/')  # при получении запроса типа '/' -> выполнить функцию
-async def welcome() -> dict:
-    return {"message": "Hello world"}
+async def get_all_messages() -> dict:
+    return messages_db
+
+@app.get('/message/{message_id}')
+async def get_message(message_id: str) -> dict:
+    return messages_db[message_id]
+
+@app.post('/message')
+async def create_message(message: str) -> str:
+    current_index = str(int(max(messages_db, key=int)) + 1)
+    messages_db[current_index] = message
+    return "Message created!"
+
+@app.put('/message/{message_id}')
+async def update_message(message_id: str, message: str) -> str:
+    messages_db[message_id] = message
+    return "Message updated!"
+
+@app.delete('/message/{message_id}')
+async def delete_message(message_id: str) -> str:
+    messages_db.pop(message_id)
+    return "Message deleted!"
+
+@app.delete('/')
+async def delete_all_messages() -> str:
+    messages_db.clear()
+    return "All messages were deleted!"
 
 # при получении запроса типа '/id?username=<имя пользователя>&age=<возраст>' -> выполняется функция
 # если было введено '/id' без уточняющего запроса -> вернет значения по умолчанию username=Bob и age=20
