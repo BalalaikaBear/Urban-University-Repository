@@ -1,11 +1,17 @@
-from fastapi import FastAPI, Path
-from typing import Annotated
+from fastapi import FastAPI, Path, Body, HTTPException
+from typing import Annotated, List
+from pydantic import BaseModel
 
 app = FastAPI()
 
 # fastapi dev unit16/fastapi_tutor.py - запуск файла
 
-messages_db = {"0": "First post in FastAPI"}
+# База данных
+messages_db: list = []
+
+class Message(BaseModel):
+    id: int = None
+    text: str
 
 # виды запросов
 # get - адрес в строке ?<переменная>=<значение>
@@ -14,28 +20,38 @@ messages_db = {"0": "First post in FastAPI"}
 # delete - запрос типа удаления
 
 @app.get('/')  # при получении запроса типа '/' -> выполнить функцию
-async def get_all_messages() -> dict:
+async def get_all_messages() -> List[Message]:
     return messages_db
 
 @app.get('/message/{message_id}')
-async def get_message(message_id: str) -> dict:
-    return messages_db[message_id]
+async def get_message(message_id: int) -> Message:
+    try:
+        return messages_db[message_id]
+    except IndexError:
+        raise HTTPException(status_code=404, detail="Message not found")
 
 @app.post('/message')
-async def create_message(message: str) -> str:
-    current_index = str(int(max(messages_db, key=int)) + 1)
-    messages_db[current_index] = message
+async def create_message(message: Message) -> str:
+    message_id: int = len(messages_db)
+    messages_db.append(message)
     return "Message created!"
 
 @app.put('/message/{message_id}')
-async def update_message(message_id: str, message: str) -> str:
-    messages_db[message_id] = message
-    return "Message updated!"
+async def update_message(message_id: int, message: str = Body()) -> str:
+    try:
+        edit_message: Message = messages_db[message_id]
+        edit_message.text = message
+        return "Message updated!"
+    except IndexError:
+        raise HTTPException(status_code=404, detail="Message not found")
 
 @app.delete('/message/{message_id}')
-async def delete_message(message_id: str) -> str:
-    messages_db.pop(message_id)
-    return "Message deleted!"
+async def delete_message(message_id: int) -> str:
+    try:
+        messages_db.pop(message_id)
+        return f"Message ID={message_id} was deleted!"
+    except IndexError:
+        raise HTTPException(status_code=404, detail="Message not found")
 
 @app.delete('/')
 async def delete_all_messages() -> str:
