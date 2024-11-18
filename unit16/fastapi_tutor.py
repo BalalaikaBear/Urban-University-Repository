@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Path
+from typing import Annotated
 
 app = FastAPI()
 
@@ -22,11 +23,20 @@ async def id_paginator(username: str = "Bob", age: int = 20) -> dict:
 
 # Выполнение запроса типа '/user/<x>/<y>' --------------------------------------------------------------------------- *
 @app.get('/user/A/B')
-async def news(first_name: str, last_name: str) -> dict:
+async def news() -> dict:
     return {"message": f" Hello, Tester!"}
 
-@app.get('/user/{first_name}/{last_name}')
-async def news(first_name: str, last_name: str) -> dict:
-    return {"message": f" Hello, {first_name} {last_name}"}
+# Path() - проверяет входимые элементы
+# Annotated -
+@app.get('/user/{username}/{id}')
+async def news(username: Annotated[str, Path(min_length=3,
+                                             max_length=15,
+                                             description="Enter your username",
+                                             example="Bob")],
+               id: int = Path(ge=0,
+                              le=100,
+                              description="Enter your ID",
+                              example=75)) -> dict:  # ge - >= 0, le - <= 100
+    return {"message": f" Hello, {username} #{id}"}
 
 # ------------------------------------------------------------------------------------------------------------------- *
